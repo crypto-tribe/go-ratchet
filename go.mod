@@ -3,7 +3,7 @@ module github.com/platform-inf/go-ratchet
 go 1.23.4
 
 require (
-	github.com/platform-inf/go-utils v0.1.1
+	github.com/platform-inf/go-utils v0.1.2
 	golang.org/x/crypto v0.36.0
 )
 
