@@ -14,7 +14,7 @@ func TestDeriveMessageCipherKeyAndNonce(t *testing.T) {
 		errString  string
 	}{
 		{},
-		{messageKey: keys.Message{Bytes: []byte{1, 2, 3}}},
+		{keys.Message{Bytes: []byte{1, 2, 3}}},
 	}
 
 	for _, test := range tests {

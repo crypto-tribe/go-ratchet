@@ -10,12 +10,7 @@ func testBytesClone(t *testing.T, bytes, clone []byte) {
 		t.Fatalf("different key bytes: %v != %v", bytes, clone)
 	}
 
-	if bytes == nil {
-		return
-	}
-
-	bytes[0]++
-	if bytes[0] == clone[0] {
+	if len(bytes) > 0 && &bytes[0] == &clone[0] {
 		t.Fatalf("the same slices: %v is %v", bytes, clone)
 	}
 }
