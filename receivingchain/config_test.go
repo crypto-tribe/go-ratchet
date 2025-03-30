@@ -25,22 +25,42 @@ func (tc testCrypto) DecryptMessage(_ keys.Message, _, _ []byte) ([]byte, error)
 	return nil, nil
 }
 
-type testSkippedKeysStorage struct{}
+type testSkippedKeysStorage struct {
+	cloneCalled bool
+}
 
-func (ts testSkippedKeysStorage) Add(_ keys.Header, _ uint64, _ keys.Message) error {
+func (ts *testSkippedKeysStorage) Add(_ keys.Header, _ uint64, _ keys.Message) error {
 	return nil
 }
 
-func (ts testSkippedKeysStorage) Clone() SkippedKeysStorage {
+func (ts *testSkippedKeysStorage) Clone() SkippedKeysStorage {
+	ts.cloneCalled = true
 	return ts
 }
 
-func (ts testSkippedKeysStorage) Delete(_ keys.Header, _ uint64) error {
+func (ts *testSkippedKeysStorage) Delete(_ keys.Header, _ uint64) error {
 	return nil
 }
 
-func (ts testSkippedKeysStorage) GetIter() (SkippedKeysIter, error) {
+func (ts *testSkippedKeysStorage) GetIter() (SkippedKeysIter, error) {
 	return func(_ SkippedKeysYield) {}, nil
+}
+
+func TestConfigClone(t *testing.T) {
+	t.Parallel()
+
+	var skippedKeysStorage testSkippedKeysStorage
+
+	cfg, err := newConfig([]Option{WithSkippedKeysStorage(&skippedKeysStorage)})
+	if err != nil {
+		t.Fatalf("newConfig() expected no error but got %v", err)
+	}
+
+	cfg.clone()
+
+	if !skippedKeysStorage.cloneCalled {
+		t.Fatal("clone() expected skipped keys storage clone")
+	}
 }
 
 func TestNewConfigDefault(t *testing.T) {
@@ -76,13 +96,15 @@ func TestNewConfigWithCryptoSuccess(t *testing.T) {
 func TestNewConfigWithSkippedKeysStorageSuccess(t *testing.T) {
 	t.Parallel()
 
-	cfg, err := newConfig([]Option{WithSkippedKeysStorage(testSkippedKeysStorage{})})
+	var storage testSkippedKeysStorage
+
+	cfg, err := newConfig([]Option{WithSkippedKeysStorage(&storage)})
 	if err != nil {
 		t.Fatalf("newConfig() with skipped keys storage options expected no error but got %v", err)
 	}
 
-	if reflect.TypeOf(cfg.skippedKeysStorage) != reflect.TypeOf(testSkippedKeysStorage{}) {
-		t.Fatal("WithSkippedKeysStorage() option did not set passed crypto")
+	if reflect.TypeOf(cfg.skippedKeysStorage) != reflect.TypeOf(&storage) {
+		t.Fatal("WithSkippedKeysStorage() option did not set passed skipped keys storage")
 	}
 }
 
