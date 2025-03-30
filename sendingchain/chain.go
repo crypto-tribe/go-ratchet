@@ -30,7 +30,7 @@ func New(
 	previousChainMessagesCount uint64,
 	options ...Option,
 ) (Chain, error) {
-	cfg, err := newConfig(options)
+	cfg, err := newConfig(options...)
 	if err != nil {
 		return Chain{}, fmt.Errorf("new config: %w", err)
 	}

@@ -51,7 +51,7 @@ func TestConfigClone(t *testing.T) {
 
 	var skippedKeysStorage testSkippedKeysStorage
 
-	cfg, err := newConfig([]Option{WithSkippedKeysStorage(&skippedKeysStorage)})
+	cfg, err := newConfig(WithSkippedKeysStorage(&skippedKeysStorage))
 	if err != nil {
 		t.Fatalf("newConfig() expected no error but got %v", err)
 	}
@@ -66,7 +66,7 @@ func TestConfigClone(t *testing.T) {
 func TestNewConfigDefault(t *testing.T) {
 	t.Parallel()
 
-	cfg, err := newConfig(nil)
+	cfg, err := newConfig()
 	if err != nil {
 		t.Fatalf("newConfig() expected no error but got %v", err)
 	}
@@ -83,7 +83,7 @@ func TestNewConfigDefault(t *testing.T) {
 func TestNewConfigWithCryptoSuccess(t *testing.T) {
 	t.Parallel()
 
-	cfg, err := newConfig([]Option{WithCrypto(testCrypto{})})
+	cfg, err := newConfig(WithCrypto(testCrypto{}))
 	if err != nil {
 		t.Fatalf("newConfig() with crypto option expected no error but got %v", err)
 	}
@@ -98,7 +98,7 @@ func TestNewConfigWithSkippedKeysStorageSuccess(t *testing.T) {
 
 	var storage testSkippedKeysStorage
 
-	cfg, err := newConfig([]Option{WithSkippedKeysStorage(&storage)})
+	cfg, err := newConfig(WithSkippedKeysStorage(&storage))
 	if err != nil {
 		t.Fatalf("newConfig() with skipped keys storage options expected no error but got %v", err)
 	}
@@ -111,7 +111,7 @@ func TestNewConfigWithSkippedKeysStorageSuccess(t *testing.T) {
 func TestNewConfigWithCryptoError(t *testing.T) {
 	t.Parallel()
 
-	_, err := newConfig([]Option{WithCrypto(nil)})
+	_, err := newConfig(WithCrypto(nil))
 	if err == nil || err.Error() != "option: invalid value: crypto is nil" {
 		t.Fatalf("WithCrypto(nil) expected error but got %v", err)
 	}
@@ -128,7 +128,7 @@ func TestNewConfigWithCryptoError(t *testing.T) {
 func TestNewConfigWithSkippedKeysStorageError(t *testing.T) {
 	t.Parallel()
 
-	_, err := newConfig([]Option{WithSkippedKeysStorage(nil)})
+	_, err := newConfig(WithSkippedKeysStorage(nil))
 	if err == nil || err.Error() != "option: invalid value: storage is nil" {
 		t.Fatalf("WithSkippedKeysStorage(nil) expected error but got %v", err)
 	}

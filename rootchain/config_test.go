@@ -19,7 +19,7 @@ func (tc testCrypto) AdvanceChain(_ keys.Root, _ keys.Shared) (keys.Root, keys.M
 func TestNewConfigDefault(t *testing.T) {
 	t.Parallel()
 
-	cfg, err := newConfig(nil)
+	cfg, err := newConfig()
 	if err != nil {
 		t.Fatalf("newConfig() expected no error but got %v", err)
 	}
@@ -32,7 +32,7 @@ func TestNewConfigDefault(t *testing.T) {
 func TestNewConfigWithCryptoSuccess(t *testing.T) {
 	t.Parallel()
 
-	cfg, err := newConfig([]Option{WithCrypto(testCrypto{})})
+	cfg, err := newConfig(WithCrypto(testCrypto{}))
 	if err != nil {
 		t.Fatalf("newConfig() with options expected no error but got %v", err)
 	}
@@ -45,7 +45,7 @@ func TestNewConfigWithCryptoSuccess(t *testing.T) {
 func TestNewConfigWithCryptoError(t *testing.T) {
 	t.Parallel()
 
-	_, err := newConfig([]Option{WithCrypto(nil)})
+	_, err := newConfig(WithCrypto(nil))
 	if err == nil || err.Error() != "option: invalid value: crypto is nil" {
 		t.Fatalf("WithCrypto(nil) expected error but got %v", err)
 	}

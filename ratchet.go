@@ -34,7 +34,7 @@ func NewRecipient(
 	receivingChainNextHeaderKey keys.Header,
 	options ...Option,
 ) (Ratchet, error) {
-	cfg, err := newConfig(options)
+	cfg, err := newConfig(options...)
 	if err != nil {
 		return Ratchet{}, fmt.Errorf("new config: %w", err)
 	}
@@ -74,7 +74,7 @@ func NewSender(
 	receivingChainNextHeaderKey keys.Header,
 	options ...Option,
 ) (Ratchet, error) {
-	cfg, err := newConfig(options)
+	cfg, err := newConfig(options...)
 	if err != nil {
 		return Ratchet{}, fmt.Errorf("new config: %w", err)
 	}
