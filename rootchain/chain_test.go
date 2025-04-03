@@ -3,6 +3,7 @@ package rootchain
 import (
 	"errors"
 	"slices"
+	"reflect"
 	"testing"
 
 	"github.com/platform-inf/go-ratchet/errlist"
@@ -41,7 +42,7 @@ func TestNewChain(t *testing.T) {
 			t.Fatalf("New(%+v, %+v): expected no error but got %v", test.rootKey, test.options, err)
 		}
 
-		if !slices.Equal(chain.rootKey.Bytes, test.rootKey.Bytes) {
+		if !reflect.DeepEqual(chain.rootKey, test.rootKey) {
 			t.Fatalf("New(%+v, %+v): invalid root key: %v != %v", test.rootKey, test.options, chain.rootKey, test.rootKey)
 		}
 	}
