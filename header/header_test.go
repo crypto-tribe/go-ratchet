@@ -13,10 +13,12 @@ func TestHeaderSuccessEncodeAndDecode(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
+		name   string
 		header Header
 		bytes  []byte
 	}{
 		{
+			"full header",
 			Header{
 				PublicKey:                         keys.Public{Bytes: []byte{0x01, 0x02, 0x03, 0x04, 0x05}},
 				PreviousSendingChainMessagesCount: 123,
@@ -29,6 +31,7 @@ func TestHeaderSuccessEncodeAndDecode(t *testing.T) {
 			},
 		},
 		{
+			"zero header",
 			Header{},
 			[]byte{
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -38,32 +41,36 @@ func TestHeaderSuccessEncodeAndDecode(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		bytes := test.header.Encode()
-		if !slices.Equal(bytes, test.bytes) {
-			t.Fatalf("%+v.Encode(): expected %v but got %v", test.header, test.bytes, bytes)
-		}
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 
-		header, err := Decode(bytes)
-		if err != nil {
-			t.Fatalf("Decode(%v): expected no error but got %v", bytes, err)
-		}
+			bytes := test.header.Encode()
+			if !slices.Equal(bytes, test.bytes) {
+				t.Fatalf("%+v.Encode(): expected %v but got %v", test.header, test.bytes, bytes)
+			}
 
-		if !slices.Equal(header.PublicKey.Bytes, test.header.PublicKey.Bytes) {
-			t.Fatalf("Decode(%v): invalid public key: %v != %v", bytes, header.PublicKey.Bytes, test.header.PublicKey.Bytes)
-		}
+			header, err := Decode(bytes)
+			if err != nil {
+				t.Fatalf("Decode(%v): expected no error but got %v", bytes, err)
+			}
 
-		if header.PreviousSendingChainMessagesCount != test.header.PreviousSendingChainMessagesCount {
-			t.Fatalf(
-				"Decode(%v): invalid previous sending chain message count: %v != %v",
-				bytes,
-				header.PreviousSendingChainMessagesCount,
-				test.header.PreviousSendingChainMessagesCount,
-			)
-		}
+			if !slices.Equal(header.PublicKey.Bytes, test.header.PublicKey.Bytes) {
+				t.Fatalf("Decode(%v): invalid public key: %v != %v", bytes, header.PublicKey.Bytes, test.header.PublicKey.Bytes)
+			}
 
-		if header.MessageNumber != test.header.MessageNumber {
-			t.Fatalf("Decode(%v): invalid message number: %v != %v", bytes, header.MessageNumber, test.header.MessageNumber)
-		}
+			if header.PreviousSendingChainMessagesCount != test.header.PreviousSendingChainMessagesCount {
+				t.Fatalf(
+					"Decode(%v): invalid previous sending chain message count: %v != %v",
+					bytes,
+					header.PreviousSendingChainMessagesCount,
+					test.header.PreviousSendingChainMessagesCount,
+				)
+			}
+
+			if header.MessageNumber != test.header.MessageNumber {
+				t.Fatalf("Decode(%v): invalid message number: %v != %v", bytes, header.MessageNumber, test.header.MessageNumber)
+			}
+		})
 	}
 }
 
