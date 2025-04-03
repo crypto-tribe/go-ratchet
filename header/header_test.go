@@ -2,6 +2,7 @@ package header
 
 import (
 	"errors"
+	"reflect"
 	"slices"
 	"testing"
 
@@ -54,35 +55,24 @@ func TestHeaderSuccessEncodeAndDecode(t *testing.T) {
 				t.Fatalf("Decode(%v): expected no error but got %v", bytes, err)
 			}
 
-			if !slices.Equal(header.PublicKey.Bytes, test.header.PublicKey.Bytes) {
-				t.Fatalf("Decode(%v): invalid public key: %v != %v", bytes, header.PublicKey.Bytes, test.header.PublicKey.Bytes)
-			}
-
-			if header.PreviousSendingChainMessagesCount != test.header.PreviousSendingChainMessagesCount {
-				t.Fatalf(
-					"Decode(%v): invalid previous sending chain message count: %v != %v",
-					bytes,
-					header.PreviousSendingChainMessagesCount,
-					test.header.PreviousSendingChainMessagesCount,
-				)
-			}
-
-			if header.MessageNumber != test.header.MessageNumber {
-				t.Fatalf("Decode(%v): invalid message number: %v != %v", bytes, header.MessageNumber, test.header.MessageNumber)
+			if !reflect.DeepEqual(header, test.header) {
+				t.Fatalf("Decode(%v): expected %+v but got %+v", bytes, test.header, header)
 			}
 		})
 	}
 }
 
-func TestHeaderDecodeError(t *testing.T) {
+func TestHeaderDecode(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
+		name          string
 		bytes         []byte
 		errorCategory error
 		errorString   string
 	}{
 		{
+			"not enough bytes",
 			[]byte{
 				0x12, 0x00, 0x00, 0x00, 0x22, 0x00, 0x00, 0x0F,
 				0x55, 0x00, 0x00, 0x00, 0x77, 0x00, 0x0B,
@@ -90,12 +80,16 @@ func TestHeaderDecodeError(t *testing.T) {
 			errlist.ErrInvalidValue,
 			"invalid value: not enough bytes",
 		},
-		{nil, errlist.ErrInvalidValue, "invalid value: not enough bytes"},
+		{"nil bytes slice", nil, errlist.ErrInvalidValue, "invalid value: not enough bytes"},
 	}
 
 	for _, test := range tests {
-		if _, err := Decode(test.bytes); !errors.Is(err, test.errorCategory) || err.Error() != test.errorString {
-			t.Fatalf("Decode(%v) expected error %q but got %v", test.bytes, test.errorString, err)
-		}
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			if _, err := Decode(test.bytes); !errors.Is(err, test.errorCategory) || err.Error() != test.errorString {
+				t.Fatalf("Decode(%v) expected error %q but got %v", test.bytes, test.errorString, err)
+			}
+		})
 	}
 }
