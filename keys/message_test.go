@@ -8,7 +8,7 @@ import (
 func TestMessageClone(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct{
+	tests := []struct {
 		name string
 		key  Message
 	}{

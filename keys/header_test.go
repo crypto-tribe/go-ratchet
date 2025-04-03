@@ -8,7 +8,7 @@ import (
 func TestHeaderClone(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct{
+	tests := []struct {
 		name string
 		key  Header
 	}{
@@ -35,7 +35,7 @@ func TestHeaderClone(t *testing.T) {
 func TestHeaderClonePtr(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct{
+	tests := []struct {
 		name string
 		key  *Header
 	}{

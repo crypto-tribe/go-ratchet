@@ -8,7 +8,7 @@ import (
 func TestMessageMasterClone(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct{
+	tests := []struct {
 		name string
 		key  MessageMaster
 	}{
@@ -35,7 +35,7 @@ func TestMessageMasterClone(t *testing.T) {
 func TestMessageMasterClonePtr(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct{
+	tests := []struct {
 		name string
 		key  *MessageMaster
 	}{

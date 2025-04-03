@@ -8,7 +8,7 @@ import (
 func TestPublicClone(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct{
+	tests := []struct {
 		name string
 		key  Public
 	}{
@@ -35,7 +35,7 @@ func TestPublicClone(t *testing.T) {
 func TestPublicClonePtr(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct{
+	tests := []struct {
 		name string
 		key  *Public
 	}{

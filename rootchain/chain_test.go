@@ -2,8 +2,8 @@ package rootchain
 
 import (
 	"errors"
-	"slices"
 	"reflect"
+	"slices"
 	"testing"
 
 	"github.com/platform-inf/go-ratchet/errlist"
@@ -13,7 +13,7 @@ import (
 func TestNewChain(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct{
+	tests := []struct {
 		rootKey   keys.Root
 		options   []Option
 		errString string
@@ -38,7 +38,7 @@ func TestNewChain(t *testing.T) {
 	for _, test := range tests {
 		chain, err := New(test.rootKey, test.options...)
 		if (err == nil && test.errString != "") ||
-		(err != nil && err.Error() != test.errString && !errors.Is(err, errlist.ErrOption)) {
+			(err != nil && err.Error() != test.errString && !errors.Is(err, errlist.ErrOption)) {
 			t.Fatalf("New(%+v, %+v): expected no error but got %v", test.rootKey, test.options, err)
 		}
 
@@ -49,12 +49,14 @@ func TestNewChain(t *testing.T) {
 }
 
 func TestChainAdvance(t *testing.T) {
+	t.Parallel()
+
 	chain, err := New(keys.Root{Bytes: []byte{1, 2, 3, 4, 5}})
 	if err != nil {
 		t.Fatalf("New(): expected no error but got %v", err)
 	}
 
-	tests := []struct{
+	tests := []struct {
 		sharedKey keys.Shared
 	}{
 		{},
