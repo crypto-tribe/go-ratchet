@@ -1,17 +1,33 @@
 package keys
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func TestPrivateClone(t *testing.T) {
 	t.Parallel()
 
-	keys := []Private{
-		Private{},
-		Private{Bytes: []byte{1, 2, 3, 4, 5}},
+	tests := []struct{
+		name string
+		key  Private
+	}{
+		{"zero private key", Private{}},
+		{"full private key", Private{Bytes: []byte{1, 2, 3, 4, 5}}},
 	}
 
-	for _, key := range keys {
-		clone := key.Clone()
-		testBytesClone(t, key.Bytes, clone.Bytes)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			clone := test.key.Clone()
+			if !reflect.DeepEqual(clone, test.key) {
+				t.Fatalf("%+v.Clone() returned different value %+v", test.key, clone)
+			}
+
+			if len(clone.Bytes) > 0 && &clone.Bytes[0] == &test.key.Bytes[0] {
+				t.Fatalf("%+v.Clone() returned same bytes memory %p", test.key, &clone.Bytes[0])
+			}
+		})
 	}
 }

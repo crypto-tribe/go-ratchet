@@ -24,6 +24,10 @@ func TestHeaderClone(t *testing.T) {
 			if !reflect.DeepEqual(clone, test.key) {
 				t.Fatalf("%+v.Clone() returned different value %+v", test.key, clone)
 			}
+
+			if len(clone.Bytes) > 0 && &clone.Bytes[0] == &test.key.Bytes[0] {
+				t.Fatalf("%+v.Clone() returned same bytes memory %p", test.key, &clone.Bytes[0])
+			}
 		})
 	}
 }
@@ -45,12 +49,12 @@ func TestHeaderClonePtr(t *testing.T) {
 			t.Parallel()
 
 			clone := test.key.ClonePtr()
-			if (test.key != nil || clone != nil) && (test.key == nil || clone == nil || test.key == clone) {
-				t.Fatalf("%+v.ClonePtr() expected pointer %p but got %p", test.key, test.key, clone)
-			}
-
 			if !reflect.DeepEqual(clone, test.key) {
 				t.Fatalf("%+v.ClonePtr() returned different value %+v", test.key, clone)
+			}
+
+			if clone != nil && len(clone.Bytes) > 0 && &clone.Bytes[0] == &test.key.Bytes[0] {
+				t.Fatalf("%+v.Clone() returned same bytes memory %p", test.key, &clone.Bytes[0])
 			}
 		})
 	}
