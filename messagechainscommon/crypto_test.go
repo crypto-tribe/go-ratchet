@@ -11,16 +11,23 @@ func TestDeriveMessageCipherKeyAndNonce(t *testing.T) {
 
 	tests := []struct {
 		messageKey keys.Message
-		errString  string
 	}{
 		{},
-		{keys.Message{Bytes: []byte{1, 2, 3}}, ""},
+		{keys.Message{Bytes: []byte{1, 2, 3}}},
 	}
 
 	for _, test := range tests {
-		_, _, err := DeriveMessageCipherKeyAndNonce(test.messageKey)
-		if (err == nil && test.errString != "") || (err != nil && err.Error() != test.errString) {
-			t.Fatalf("DeriveMessageCipherKeyAndNonce(%+v): expected error %q but got %v", test.messageKey, test.errString, err)
+		cipherKey, cipherNonce, err := DeriveMessageCipherKeyAndNonce(test.messageKey)
+		if err != nil {
+			t.Fatalf("DeriveMessageCipherKeyAndNonce(%+v): expected no error but got %v", test.messageKey, err)
+		}
+
+		if len(cipherKey) == 0 {
+			t.Fatalf("DeriveMessageCipherKeyAndNonce(%+v): returned empty cipher key", test.messageKey)
+		}
+
+		if len(cipherNonce) == 0 {
+			t.Fatalf("DeriveMessageCipherKeyAndNonce(%+v): returned empty cipher nonce", test.messageKey)
 		}
 	}
 }
