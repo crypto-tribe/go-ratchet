@@ -56,88 +56,95 @@ func TestConfigClone(t *testing.T) {
 		t.Fatalf("newConfig() expected no error but got %v", err)
 	}
 
-	cfg.clone()
+	clone := cfg.clone()
+	if !reflect.DeepEqual(clone, cfg) {
+		t.Fatalf("%+v.clone() returned different config %+v", cfg, clone)
+	}
 
 	if !skippedKeysStorage.cloneCalled {
 		t.Fatal("clone() expected skipped keys storage clone")
 	}
 }
 
-func TestNewConfigDefault(t *testing.T) {
+func TestNewConfig(t *testing.T) {
 	t.Parallel()
 
-	cfg, err := newConfig()
-	if err != nil {
-		t.Fatalf("newConfig() expected no error but got %v", err)
-	}
+	t.Run("default config", func(t *testing.T) {
+		t.Parallel()
 
-	if utils.IsNil(cfg.crypto) {
-		t.Fatal("newConfig() sets no default value for crypto")
-	}
+		cfg, err := newConfig()
+		if err != nil {
+			t.Fatalf("newConfig() expected no error but got %v", err)
+		}
 
-	if utils.IsNil(cfg.skippedKeysStorage) {
-		t.Fatal("newConfig() sets no default value for skipped keys storage")
-	}
-}
+		if utils.IsNil(cfg.crypto) {
+			t.Fatal("newConfig() sets no default value for crypto")
+		}
 
-func TestNewConfigWithCryptoSuccess(t *testing.T) {
-	t.Parallel()
+		if utils.IsNil(cfg.skippedKeysStorage) {
+			t.Fatal("newConfig() sets no default value for skipped keys storage")
+		}
+	})
 
-	cfg, err := newConfig(WithCrypto(testCrypto{}))
-	if err != nil {
-		t.Fatalf("newConfig() with crypto option expected no error but got %v", err)
-	}
+	t.Run("crypto option success", func(t *testing.T) {
+		t.Parallel()
 
-	if reflect.TypeOf(cfg.crypto) != reflect.TypeOf(testCrypto{}) {
-		t.Fatal("WithCrypto() option did not set passed crypto")
-	}
-}
+		cfg, err := newConfig(WithCrypto(testCrypto{}))
+		if err != nil {
+			t.Fatalf("newConfig() with crypto option expected no error but got %v", err)
+		}
 
-func TestNewConfigWithSkippedKeysStorageSuccess(t *testing.T) {
-	t.Parallel()
+		if reflect.TypeOf(cfg.crypto) != reflect.TypeOf(testCrypto{}) {
+			t.Fatal("WithCrypto() option did not set passed crypto")
+		}
+	})
 
-	var storage testSkippedKeysStorage
+	t.Run("skipped keys option success", func(t *testing.T) {
+		t.Parallel()
 
-	cfg, err := newConfig(WithSkippedKeysStorage(&storage))
-	if err != nil {
-		t.Fatalf("newConfig() with skipped keys storage options expected no error but got %v", err)
-	}
+		var storage testSkippedKeysStorage
 
-	if reflect.TypeOf(cfg.skippedKeysStorage) != reflect.TypeOf(&storage) {
-		t.Fatal("WithSkippedKeysStorage() option did not set passed skipped keys storage")
-	}
-}
+		cfg, err := newConfig(WithSkippedKeysStorage(&storage))
+		if err != nil {
+			t.Fatalf("newConfig() with skipped keys storage options expected no error but got %v", err)
+		}
 
-func TestNewConfigWithCryptoError(t *testing.T) {
-	t.Parallel()
+		if reflect.TypeOf(cfg.skippedKeysStorage) != reflect.TypeOf(&storage) {
+			t.Fatal("WithSkippedKeysStorage() option did not set passed skipped keys storage")
+		}
+	})
 
-	_, err := newConfig(WithCrypto(nil))
-	if err == nil || err.Error() != "option: invalid value: crypto is nil" {
-		t.Fatalf("WithCrypto(nil) expected error but got %v", err)
-	}
+	t.Run("crypto option error", func(t *testing.T) {
+		t.Parallel()
 
-	if !errors.Is(err, errlist.ErrOption) {
-		t.Fatalf("WithCrypto(nil) error is not option error but %v", err)
-	}
+		_, err := newConfig(WithCrypto(nil))
+		if err == nil || err.Error() != "option: invalid value: crypto is nil" {
+			t.Fatalf("WithCrypto(nil) expected error but got %v", err)
+		}
 
-	if !errors.Is(err, errlist.ErrInvalidValue) {
-		t.Fatalf("WithCrypto(nil) error is not invalid value error but %v", err)
-	}
-}
+		if !errors.Is(err, errlist.ErrOption) {
+			t.Fatalf("WithCrypto(nil) error is not option error but %v", err)
+		}
 
-func TestNewConfigWithSkippedKeysStorageError(t *testing.T) {
-	t.Parallel()
+		if !errors.Is(err, errlist.ErrInvalidValue) {
+			t.Fatalf("WithCrypto(nil) error is not invalid value error but %v", err)
+		}
+	})
 
-	_, err := newConfig(WithSkippedKeysStorage(nil))
-	if err == nil || err.Error() != "option: invalid value: storage is nil" {
-		t.Fatalf("WithSkippedKeysStorage(nil) expected error but got %v", err)
-	}
+	t.Run("skipped keys error", func(t *testing.T) {
+		t.Parallel()
 
-	if !errors.Is(err, errlist.ErrOption) {
-		t.Fatalf("WithSkippedKeysStorage(nil) error is not option error but %v", err)
-	}
+		_, err := newConfig(WithSkippedKeysStorage(nil))
+		if err == nil || err.Error() != "option: invalid value: storage is nil" {
+			t.Fatalf("WithSkippedKeysStorage(nil) expected error but got %v", err)
+		}
 
-	if !errors.Is(err, errlist.ErrInvalidValue) {
-		t.Fatalf("WithSkippedKeysStorage(nil) error is not invalid value error but %v", err)
-	}
+		if !errors.Is(err, errlist.ErrOption) {
+			t.Fatalf("WithSkippedKeysStorage(nil) error is not option error but %v", err)
+		}
+
+		if !errors.Is(err, errlist.ErrInvalidValue) {
+			t.Fatalf("WithSkippedKeysStorage(nil) error is not invalid value error but %v", err)
+		}
+	})
 }
