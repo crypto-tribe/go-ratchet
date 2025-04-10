@@ -89,8 +89,10 @@ func (ch *Chain) PrepareHeader(publicKey keys.Public) header.Header {
 }
 
 func (ch *Chain) Upgrade(masterKey keys.MessageMaster, nextHeaderKey keys.Header) {
+	headerKey := ch.nextHeaderKey.Clone()
+
 	ch.masterKey = &masterKey
-	ch.headerKey = &ch.nextHeaderKey
+	ch.headerKey = &headerKey
 	ch.nextHeaderKey = nextHeaderKey
 	ch.previousChainMessagesCount = ch.nextMessageNumber
 	ch.nextMessageNumber = 0
