@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"testing"
 
+	cipher "golang.org/x/crypto/chacha20poly1305"
+
 	"github.com/platform-inf/go-ratchet/errlist"
 	"github.com/platform-inf/go-ratchet/header"
 	"github.com/platform-inf/go-ratchet/keys"
@@ -169,6 +171,88 @@ func TestChainClone(t *testing.T) {
 
 			if len(chain.nextHeaderKey.Bytes) > 0 && &chain.nextHeaderKey.Bytes[0] == &clone.nextHeaderKey.Bytes[0] {
 				t.Fatalf("%+v.Clone(): clone contains same next header key key memory pointer %v", chain, clone.nextHeaderKey)
+			}
+		})
+	}
+}
+
+func TestChainEncrypt(t *testing.T) {
+	t.Parallel()
+
+	chain, err := New(
+		nil,
+		nil,
+		keys.Header{Bytes: []byte{44, 55, 66, 77}},
+		0,
+		2,
+	)
+	if err != nil {
+		t.Fatalf("New(): expected no error but got %v", err)
+	}
+
+	_, _, err = chain.Encrypt(header.Header{}, []byte{1, 2, 3}, []byte{4, 5, 6})
+	if !errors.Is(err, errlist.ErrInvalidValue) || err.Error() != "invalid value: header key is nil" {
+		t.Fatalf("%+v.Encrypt() expected header key nil error but got %+v", chain, err)
+	}
+
+	nextHeaderKey := keys.Header{Bytes: make([]byte, cipher.KeySize)}
+	masterKey := keys.MessageMaster{Bytes: []byte{11, 22, 33}}
+	chain.Upgrade(masterKey, nextHeaderKey)
+
+	// Because of invalid next header key from the constructor, which became current header key after upgrade.
+	_, _, err = chain.Encrypt(header.Header{}, []byte{1, 2, 3}, []byte{4, 5, 6})
+	if !errors.Is(err, errlist.ErrCrypto) ||
+		err.Error() != "crypto: encrypt header: new cipher: chacha20poly1305: bad key length" {
+		t.Fatalf("%+v.Encrypt() expected invalid header key error but got %+v", chain, err)
+	}
+
+	chain.Upgrade(masterKey, nextHeaderKey)
+
+	chain.masterKey = nil
+
+	_, _, err = chain.Encrypt(header.Header{}, []byte{1, 2, 3}, []byte{4, 5, 6})
+	if !errors.Is(err, errlist.ErrInvalidValue) || err.Error() != "advance chain: invalid value: master key is nil" {
+		t.Fatalf("%+v.Encrypt() expected master key nil error but got %+v", chain, err)
+	}
+
+	chain.masterKey = &masterKey
+
+	tests := []struct {
+		name   string
+		header header.Header
+		data   []byte
+		auth   []byte
+	}{
+		{"zero args", header.Header{}, nil, nil},
+	}
+
+	for testIndex, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			encryptedHeader, encryptedData, err := chain.Encrypt(test.header, test.data, test.auth)
+			if err != nil {
+				t.Fatalf("%+v.Encrypt(%+v, %v, %v) expected no error but got %+v", chain, test.header, test.data, test.auth, err)
+			}
+
+			if len(encryptedHeader) == 0 {
+				t.Fatalf("%+v.Encrypt(%+v, %v, %v) returned empty encrypted header", chain, test.header, test.data, test.auth)
+			}
+
+			if len(encryptedData) == 0 {
+				t.Fatalf("%+v.Encrypt(%+v, %v, %v) returned empty encrypted data", chain, test.header, test.data, test.auth)
+			}
+
+			if reflect.DeepEqual(encryptedHeader, test.header.Encode()) {
+				t.Fatalf("%+v.Encrypt(%+v, %v, %v) returned input header bytes", chain, test.header, test.data, test.auth)
+			}
+
+			if reflect.DeepEqual(encryptedData, test.data) {
+				t.Fatalf("%+v.Encrypt(%+v, %v, %v) returned input data", chain, test.header, test.data, test.auth)
+			}
+
+			if chain.PrepareHeader(keys.Public{}).MessageNumber != uint64(testIndex)+1 {
+				t.Fatalf("expected message number increase after test #%d", testIndex)
 			}
 		})
 	}
