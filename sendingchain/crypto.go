@@ -23,7 +23,7 @@ type Crypto interface {
 
 type defaultCrypto struct{}
 
-func newDefaultCrypto() Crypto {
+func newDefaultCrypto() defaultCrypto {
 	return defaultCrypto{}
 }
 

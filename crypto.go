@@ -17,7 +17,7 @@ type defaultCrypto struct {
 	curve ecdh.Curve
 }
 
-func newDefaultCrypto() Crypto {
+func newDefaultCrypto() defaultCrypto {
 	return defaultCrypto{curve: ecdh.X25519()}
 }
 

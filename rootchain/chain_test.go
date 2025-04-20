@@ -19,13 +19,7 @@ func TestNewChain(t *testing.T) {
 		errCategories []error
 		errString     string
 	}{
-		{
-			"zero root key and no options",
-			keys.Root{},
-			nil,
-			nil,
-			"",
-		},
+		{"zero root key and no options", keys.Root{}, nil, nil, ""},
 		{
 			"full root key and crypto option",
 			keys.Root{Bytes: []byte{1, 2, 3}},
