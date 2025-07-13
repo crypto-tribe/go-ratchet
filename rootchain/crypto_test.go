@@ -4,34 +4,50 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/platform-inf/go-ratchet/keys"
+	"github.com/lyreware/go-ratchet/keys"
 )
+
+var defaultCryptoAdvanceChainTests = []struct {
+	name      string
+	rootKey   keys.Root
+	sharedKey keys.Shared
+}{
+	{"zero keys", keys.Root{}, keys.Shared{}},
+	{
+		"full shared key and zero root key",
+		keys.Root{},
+		keys.Shared{
+			Bytes: []byte{1, 2, 3, 4, 5, 6, 7, 8},
+		},
+	},
+	{
+		"full root key and zero shared key",
+		keys.Root{,
+			Bytes: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0},
+		},
+		keys.Shared{},
+	},
+	{
+		"full keys",
+		keys.Root{
+			Bytes: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0},
+		},
+		keys.Shared{
+			Bytes: []byte{1, 2, 3, 4, 5, 6, 7, 8},
+		},
+	},
+}
 
 func TestDefaultCryptoAdvanceChain(t *testing.T) {
 	t.Parallel()
 
 	crypto := newDefaultCrypto()
 
-	tests := []struct {
-		name      string
-		rootKey   keys.Root
-		sharedKey keys.Shared
-	}{
-		{"zero keys", keys.Root{}, keys.Shared{}},
-		{"full shared key and zero root key", keys.Root{}, keys.Shared{Bytes: []byte{1, 2, 3, 4, 5, 6, 7, 8}}},
-		{"full root key and zero shared key", keys.Root{Bytes: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0}}, keys.Shared{}},
-		{
-			"full keys",
-			keys.Root{Bytes: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0}},
-			keys.Shared{Bytes: []byte{1, 2, 3, 4, 5, 6, 7, 8}},
-		},
-	}
-
-	for _, test := range tests {
+	for _, test := range defaultCryptoAdvanceChainTests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			rootKey, messageMasterKey, headerKey, err := crypto.AdvanceChain(test.rootKey, test.sharedKey)
+			rootKey, masterKey, headerKey, err := crypto.AdvanceChain(test.rootKey, test.sharedKey)
 			if err != nil {
 				t.Fatalf("AdvanceChain(%+v, %+v): expected no error but got %v", test.rootKey, test.sharedKey, err)
 			}
@@ -44,7 +60,7 @@ func TestDefaultCryptoAdvanceChain(t *testing.T) {
 				t.Fatalf("AdvanceChain(%+v, %+v): returned empty root key", test.rootKey, test.sharedKey)
 			}
 
-			if len(messageMasterKey.Bytes) == 0 {
+			if len(masterKey.Bytes) == 0 {
 				t.Fatalf("AdvanceChain(%+v, %+v): returned empty message master key", test.rootKey, test.sharedKey)
 			}
 

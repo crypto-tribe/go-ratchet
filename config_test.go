@@ -5,13 +5,13 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/platform-inf/go-ratchet/errlist"
-	"github.com/platform-inf/go-ratchet/header"
-	"github.com/platform-inf/go-ratchet/keys"
-	"github.com/platform-inf/go-ratchet/receivingchain"
-	"github.com/platform-inf/go-ratchet/rootchain"
-	"github.com/platform-inf/go-ratchet/sendingchain"
-	"github.com/platform-inf/go-utils"
+	"github.com/lyreware/go-ratchet/errlist"
+	"github.com/lyreware/go-ratchet/header"
+	"github.com/lyreware/go-ratchet/keys"
+	"github.com/lyreware/go-ratchet/receivingchain"
+	"github.com/lyreware/go-ratchet/rootchain"
+	"github.com/lyreware/go-ratchet/sendingchain"
+	"github.com/lyreware/go-utils"
 )
 
 type testCrypto struct{}
@@ -26,8 +26,8 @@ func (tc testCrypto) GenerateKeyPair() (keys.Private, keys.Public, error) {
 
 type testReceivingChainCrypto struct{}
 
-func (tc testReceivingChainCrypto) AdvanceChain(_ keys.MessageMaster) (keys.MessageMaster, keys.Message, error) {
-	return keys.MessageMaster{}, keys.Message{}, nil
+func (tc testReceivingChainCrypto) AdvanceChain(_ keys.Master) (keys.Master, keys.Message, error) {
+	return keys.Master{}, keys.Message{}, nil
 }
 
 func (tc testReceivingChainCrypto) DecryptHeader(_ keys.Header, _ []byte) (header.Header, error) {
@@ -43,14 +43,14 @@ type testRootChainCrypto struct{}
 func (tc testRootChainCrypto) AdvanceChain(
 	_ keys.Root,
 	_ keys.Shared,
-) (keys.Root, keys.MessageMaster, keys.Header, error) {
-	return keys.Root{}, keys.MessageMaster{}, keys.Header{}, nil
+) (keys.Root, keys.Master, keys.Header, error) {
+	return keys.Root{}, keys.Master{}, keys.Header{}, nil
 }
 
 type testSendingChainCrypto struct{}
 
-func (tc testSendingChainCrypto) AdvanceChain(_ keys.MessageMaster) (keys.MessageMaster, keys.Message, error) {
-	return keys.MessageMaster{}, keys.Message{}, nil
+func (tc testSendingChainCrypto) AdvanceChain(_ keys.Master) (keys.Master, keys.Message, error) {
+	return keys.Master{}, keys.Message{}, nil
 }
 
 func (tc testSendingChainCrypto) EncryptHeader(_ keys.Header, _ header.Header) ([]byte, error) {

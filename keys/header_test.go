@@ -5,18 +5,23 @@ import (
 	"testing"
 )
 
+var headerCloneTests = []struct {
+	name string
+	key  Header
+}{
+	{"zero header key", Header{}},
+	{
+		"non-empty header key",
+		Header{
+			Bytes: []byte{1, 2, 3, 4, 5},
+		},
+	},
+}
+
 func TestHeaderClone(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name string
-		key  Header
-	}{
-		{"zero header key", Header{}},
-		{"full header key", Header{Bytes: []byte{1, 2, 3, 4, 5}}},
-	}
-
-	for _, test := range tests {
+	for _, test := range headerCloneTests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -32,19 +37,24 @@ func TestHeaderClone(t *testing.T) {
 	}
 }
 
+var headerClonePtrTests = []struct {
+	name string
+	key  *Header
+}{
+	{"nil ptr to header key", nil},
+	{"ptr to zero header key", &Header{}},
+	{
+		"ptr to non-empty header key",
+		&Header{
+			Bytes: []byte{1, 2, 3, 4, 5},
+		},
+	},
+}
+
 func TestHeaderClonePtr(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name string
-		key  *Header
-	}{
-		{"nil ptr to header key", nil},
-		{"ptr to zero header key", &Header{}},
-		{"ptr to full header key", &Header{Bytes: []byte{1, 2, 3, 4, 5}}},
-	}
-
-	for _, test := range tests {
+	for _, test := range headerClonePtrTests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 

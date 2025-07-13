@@ -5,18 +5,23 @@ import (
 	"testing"
 )
 
+var messageCloneTests = []struct {
+	name string
+	key  Message
+}{
+	{"zero message key", Message{}},
+	{
+		"non-empty message key",
+		Message{
+			Bytes: []byte{1, 2, 3, 4, 5},
+		},
+	},
+}
+
 func TestMessageClone(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name string
-		key  Message
-	}{
-		{"zero message key", Message{}},
-		{"full message key", Message{Bytes: []byte{1, 2, 3, 4, 5}}},
-	}
-
-	for _, test := range tests {
+	for _, test := range messageCloneTests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 

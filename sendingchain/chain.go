@@ -3,10 +3,10 @@ package sendingchain
 import (
 	"fmt"
 
-	"github.com/platform-inf/go-ratchet/errlist"
-	"github.com/platform-inf/go-ratchet/header"
-	"github.com/platform-inf/go-ratchet/keys"
-	"github.com/platform-inf/go-utils"
+	"github.com/lyreware/go-ratchet/errlist"
+	"github.com/lyreware/go-ratchet/header"
+	"github.com/lyreware/go-ratchet/keys"
+	"github.com/lyreware/go-utils/convert"
 )
 
 // Ratchet sending chain.
@@ -14,7 +14,7 @@ import (
 // Please note that this structure may corrupt its state in case of errors. Therefore, clone the data at the top level
 // and replace the current data with it if there are no errors.
 type Chain struct {
-	masterKey                  *keys.MessageMaster
+	masterKey                  *keys.Master
 	headerKey                  *keys.Header
 	nextHeaderKey              keys.Header
 	nextMessageNumber          uint64
@@ -23,28 +23,27 @@ type Chain struct {
 }
 
 func New(
-	masterKey *keys.MessageMaster,
+	masterKey *keys.Master,
 	headerKey *keys.Header,
 	nextHeaderKey keys.Header,
 	nextMessageNumber uint64,
 	previousChainMessagesCount uint64,
 	options ...Option,
-) (Chain, error) {
-	cfg, err := newConfig(options...)
-	if err != nil {
-		return Chain{}, fmt.Errorf("new config: %w", err)
-	}
-
-	chain := Chain{
+) (chain Chain, err error) {
+	chain = Chain{
 		masterKey:                  masterKey,
 		headerKey:                  headerKey,
 		nextHeaderKey:              nextHeaderKey,
 		nextMessageNumber:          nextMessageNumber,
 		previousChainMessagesCount: previousChainMessagesCount,
-		cfg:                        cfg,
 	}
 
-	return chain, nil
+	chain.cfg, err = newConfig(options...)
+	if err != nil {
+		return chain, fmt.Errorf("new config: %w", err)
+	}
+
+	return chain, err
 }
 
 func (ch Chain) Clone() Chain {
@@ -55,61 +54,65 @@ func (ch Chain) Clone() Chain {
 	return ch
 }
 
-func (ch *Chain) Encrypt(header header.Header, data, auth []byte) ([]byte, []byte, error) {
+func (ch *Chain) Encrypt(
+	header header.Header,
+	data []byte,
+	auth []byte,
+) (encryptedHeader []byte, encryptedData []byte, err error) {
 	if ch.headerKey == nil {
-		return nil, nil, fmt.Errorf("%w: header key is nil", errlist.ErrInvalidValue)
+		return encryptedHeader, encryptedData, fmt.Errorf("%w: header key is nil", errlist.ErrInvalidValue)
 	}
 
-	encryptedHeader, err := ch.cfg.crypto.EncryptHeader(*ch.headerKey, header)
+	encryptedHeader, err = ch.cfg.crypto.EncryptHeader(*ch.headerKey, header)
 	if err != nil {
-		return nil, nil, fmt.Errorf("%w: encrypt header: %w", errlist.ErrCrypto, err)
+		return encryptedHeader, encryptedData, fmt.Errorf("%w: encrypt header: %w", errlist.ErrCrypto, err)
 	}
 
 	messageKey, err := ch.advance()
 	if err != nil {
-		return nil, nil, fmt.Errorf("advance chain: %w", err)
+		return encryptedHeader, encryptedData, fmt.Errorf("advance chain: %w", err)
 	}
 
 	auth = utils.ConcatByteSlices(encryptedHeader, auth)
 
-	encryptedData, err := ch.cfg.crypto.EncryptMessage(messageKey, data, auth)
+	encryptedData, err = ch.cfg.crypto.EncryptMessage(messageKey, data, auth)
 	if err != nil {
-		return nil, nil, fmt.Errorf("%w: encrypt message: %w", errlist.ErrCrypto, err)
+		return encryptedHeader, encryptedData, fmt.Errorf("%w: encrypt message: %w", errlist.ErrCrypto, err)
 	}
 
-	return encryptedHeader, encryptedData, nil
+	return encryptedHeader, encryptedData, err
 }
 
-func (ch *Chain) PrepareHeader(publicKey keys.Public) header.Header {
-	return header.Header{
+func (ch *Chain) PrepareHeader(publicKey keys.Public) (h header.Header) {
+	h = header.Header{
 		PublicKey:                         publicKey,
 		MessageNumber:                     ch.nextMessageNumber,
 		PreviousSendingChainMessagesCount: ch.previousChainMessagesCount,
 	}
+
+	return h
 }
 
-func (ch *Chain) Upgrade(masterKey keys.MessageMaster, nextHeaderKey keys.Header) {
-	headerKey := ch.nextHeaderKey.Clone()
-
+func (ch *Chain) Upgrade(masterKey keys.Master, nextHeaderKey keys.Header) {
 	ch.masterKey = &masterKey
-	ch.headerKey = &headerKey
+	ch.headerKey = convert.ToPtr(ch.nextHeaderKey.Clone())
 	ch.nextHeaderKey = nextHeaderKey
 	ch.previousChainMessagesCount = ch.nextMessageNumber
 	ch.nextMessageNumber = 0
 }
 
-func (ch *Chain) advance() (keys.Message, error) {
+func (ch *Chain) advance() (messageKey keys.Message, err error) {
 	if ch.masterKey == nil {
-		return keys.Message{}, fmt.Errorf("%w: master key is nil", errlist.ErrInvalidValue)
+		return messageKey, fmt.Errorf("%w: master key is nil", errlist.ErrInvalidValue)
 	}
 
 	newMasterKey, messageKey, err := ch.cfg.crypto.AdvanceChain(*ch.masterKey)
 	if err != nil {
-		return keys.Message{}, fmt.Errorf("%w: advance via crypto: %w", errlist.ErrCrypto, err)
+		return messageKey, fmt.Errorf("%w: advance via crypto: %w", errlist.ErrCrypto, err)
 	}
 
 	ch.masterKey = &newMasterKey
 	ch.nextMessageNumber++
 
-	return messageKey, nil
+	return messageKey, err
 }

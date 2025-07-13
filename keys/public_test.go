@@ -5,18 +5,23 @@ import (
 	"testing"
 )
 
+var publicCloneTests = []struct {
+	name string
+	key  Public
+}{
+	{"zero public key", Public{}},
+	{
+		"non-empty public key",
+		Public{
+			Bytes: []byte{1, 2, 3, 4, 5},
+		},
+	},
+}
+
 func TestPublicClone(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name string
-		key  Public
-	}{
-		{"zero public key", Public{}},
-		{"full public key", Public{Bytes: []byte{1, 2, 3, 4, 5}}},
-	}
-
-	for _, test := range tests {
+	for _, test := range publicCloneTests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -32,19 +37,19 @@ func TestPublicClone(t *testing.T) {
 	}
 }
 
+var publicClonePtrTests = []struct {
+	name string
+	key  *Public
+}{
+	{"nil ptr to public key", nil},
+	{"ptr to zero public key", &Public{}},
+	{"ptr to non-empty public key", &Public{Bytes: []byte{1, 2, 3, 4, 5}}},
+}
+
 func TestPublicClonePtr(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name string
-		key  *Public
-	}{
-		{"nil ptr to public key", nil},
-		{"ptr to zero public key", &Public{}},
-		{"ptr to full public key", &Public{Bytes: []byte{1, 2, 3, 4, 5}}},
-	}
-
-	for _, test := range tests {
+	for _, test := range publicCloneTests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 

@@ -9,7 +9,7 @@ import (
 	cipher "golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/hkdf"
 
-	"github.com/platform-inf/go-ratchet/keys"
+	"github.com/lyreware/go-ratchet/keys"
 )
 
 const cryptoMessageCipherKDFOutputLen = cipher.KeySize + cipher.NonceSizeX
@@ -19,26 +19,31 @@ var (
 	cryptoMessageCipherKDFInfo = []byte("message cipher")
 )
 
-func DeriveMessageCipherKeyAndNonce(messageKey keys.Message) ([]byte, []byte, error) {
+func DeriveMessageCipherKeyAndNonce(messageKey keys.Message) (key []byte, nonce []byte, err error) {
 	var newHashErr error
 
 	getHasher := func() hash.Hash {
 		var hasher hash.Hash
+
 		hasher, newHashErr = blake2b.New512(nil)
 
 		return hasher
 	}
 
 	kdf := hkdf.New(getHasher, messageKey.Bytes, cryptoMessageCipherKDFSalt, cryptoMessageCipherKDFInfo)
+	kdfOutput := make([]byte, cryptoMessageCipherKDFOutputLen)
 
-	output := make([]byte, cryptoMessageCipherKDFOutputLen)
-	if _, err := io.ReadFull(kdf, output); err != nil {
-		return nil, nil, fmt.Errorf("KDF: %w", err)
+	_, err = io.ReadFull(kdf, kdfOutput)
+	if err != nil {
+		return key, nonce, fmt.Errorf("KDF: %w", err)
 	}
 
 	if newHashErr != nil {
-		return nil, nil, fmt.Errorf("new hash: %w", newHashErr)
+		return key, nonce, fmt.Errorf("new hash: %w", newHashErr)
 	}
 
-	return output[:cipher.KeySize], output[cipher.KeySize:], nil
+	key = kdfOutput[:cipher.KeySize]
+	nonce = kdfOutput[cipher.KeySize:]
+
+	return key, nonce, err
 }

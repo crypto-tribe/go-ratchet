@@ -5,18 +5,23 @@ import (
 	"testing"
 )
 
+var privateCloneTests = []struct {
+	name string
+	key  Private
+}{
+	{"zero private key", Private{}},
+	{
+		"non-empty private key",
+		Private{
+			Bytes: []byte{1, 2, 3, 4, 5},
+		},
+	},
+}
+
 func TestPrivateClone(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name string
-		key  Private
-	}{
-		{"zero private key", Private{}},
-		{"full private key", Private{Bytes: []byte{1, 2, 3, 4, 5}}},
-	}
-
-	for _, test := range tests {
+	for _, test := range privateCloneTests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 

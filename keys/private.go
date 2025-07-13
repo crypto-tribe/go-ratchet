@@ -1,12 +1,14 @@
 package keys
 
-import "github.com/platform-inf/go-utils"
+import (
+	"github.com/lyreware/go-utils/slices"
+)
 
 type Private struct {
 	Bytes []byte
 }
 
 func (pk Private) Clone() Private {
-	pk.Bytes = utils.CloneByteSlice(pk.Bytes)
+	pk.Bytes = slices.CloneBytes(pk.Bytes)
 	return pk
 }

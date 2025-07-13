@@ -3,22 +3,22 @@ package messagechainscommon
 import (
 	"testing"
 
-	"github.com/platform-inf/go-ratchet/keys"
+	"github.com/lyreware/go-ratchet/keys"
 )
+
+var deriveMessageCipherKeyAndNonceTests = []struct {
+	name       string
+	messageKey keys.Message
+}{
+	{"zero key", keys.Message{}},
+	{"key with empty bytes slice", keys.Message{Bytes: []byte{}}},
+	{"full key", keys.Message{Bytes: []byte{1, 2, 3}}},
+}
 
 func TestDeriveMessageCipherKeyAndNonce(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name       string
-		messageKey keys.Message
-	}{
-		{"zero key", keys.Message{}},
-		{"key with empty bytes slice", keys.Message{Bytes: []byte{}}},
-		{"full key", keys.Message{Bytes: []byte{1, 2, 3}}},
-	}
-
-	for _, test := range tests {
+	for _, test := range deriveMessageCipherKeyAndNonceTests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 

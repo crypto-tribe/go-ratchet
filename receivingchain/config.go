@@ -3,8 +3,8 @@ package receivingchain
 import (
 	"fmt"
 
-	"github.com/platform-inf/go-ratchet/errlist"
-	"github.com/platform-inf/go-utils"
+	"github.com/lyreware/go-ratchet/errlist"
+	"github.com/lyreware/go-utils"
 )
 
 type config struct {
@@ -12,27 +12,29 @@ type config struct {
 	skippedKeysStorage SkippedKeysStorage
 }
 
-func newConfig(options ...Option) (config, error) {
-	cfg := config{
+func newConfig(options ...Option) (cfg config, err error) {
+	cfg = config{
 		crypto:             newDefaultCrypto(),
 		skippedKeysStorage: newDefaultSkippedKeysStorage(),
 	}
 
-	if err := cfg.applyOptions(options...); err != nil {
-		return config{}, fmt.Errorf("%w: %w", errlist.ErrOption, err)
+	err = cfg.applyOptions(options...)
+	if err != nil {
+		return cfg, fmt.Errorf("%w: %w", errlist.ErrOption, err)
 	}
 
-	return cfg, nil
+	return cfg, err
 }
 
-func (cfg *config) applyOptions(options ...Option) error {
+func (cfg *config) applyOptions(options ...Option) (err error) {
 	for _, option := range options {
-		if err := option(cfg); err != nil {
+		err = option(cfg)
+		if err != nil {
 			return err
 		}
 	}
 
-	return nil
+	return err
 }
 
 func (cfg config) clone() config {
@@ -43,25 +45,25 @@ func (cfg config) clone() config {
 type Option func(cfg *config) error
 
 func WithCrypto(crypto Crypto) Option {
-	return func(cfg *config) error {
+	return func(cfg *config) (err error) {
 		if utils.IsNil(crypto) {
 			return fmt.Errorf("%w: crypto is nil", errlist.ErrInvalidValue)
 		}
 
 		cfg.crypto = crypto
 
-		return nil
+		return err
 	}
 }
 
 func WithSkippedKeysStorage(storage SkippedKeysStorage) Option {
-	return func(cfg *config) error {
+	return func(cfg *config) (err error) {
 		if utils.IsNil(storage) {
 			return fmt.Errorf("%w: storage is nil", errlist.ErrInvalidValue)
 		}
 
 		cfg.skippedKeysStorage = storage
 
-		return nil
+		return err
 	}
 }

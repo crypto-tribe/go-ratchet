@@ -3,12 +3,12 @@ package ratchet
 import (
 	"fmt"
 
-	"github.com/platform-inf/go-ratchet/errlist"
-	"github.com/platform-inf/go-ratchet/keys"
-	"github.com/platform-inf/go-ratchet/receivingchain"
-	"github.com/platform-inf/go-ratchet/rootchain"
-	"github.com/platform-inf/go-ratchet/sendingchain"
-	"github.com/platform-inf/go-utils"
+	"github.com/lyreware/go-ratchet/errlist"
+	"github.com/lyreware/go-ratchet/keys"
+	"github.com/lyreware/go-ratchet/receivingchain"
+	"github.com/lyreware/go-ratchet/rootchain"
+	"github.com/lyreware/go-ratchet/sendingchain"
+	"github.com/lyreware/go-utils"
 )
 
 // Ratchet is the participant of the conversation.
@@ -33,37 +33,46 @@ func NewRecipient(
 	sendingChainNextHeaderKey keys.Header,
 	receivingChainNextHeaderKey keys.Header,
 	options ...Option,
-) (Ratchet, error) {
-	cfg, err := newConfig(options...)
-	if err != nil {
-		return Ratchet{}, fmt.Errorf("new config: %w", err)
-	}
-
-	rootChain, err := rootchain.New(rootKey, cfg.rootOptions...)
-	if err != nil {
-		return Ratchet{}, fmt.Errorf("new root chain: %w", err)
-	}
-
-	sendingChain, err := sendingchain.New(nil, nil, sendingChainNextHeaderKey, 0, 0, cfg.sendingOptions...)
-	if err != nil {
-		return Ratchet{}, fmt.Errorf("new sending chain: %w", err)
-	}
-
-	receivingChain, err := receivingchain.New(nil, nil, receivingChainNextHeaderKey, 0, cfg.receivingOptions...)
-	if err != nil {
-		return Ratchet{}, fmt.Errorf("new receiving chain: %w", err)
-	}
-
-	ratchet := Ratchet{
+) (ratchet Ratchet, err error) {
+	ratchet = Ratchet{
 		localPrivateKey: localPrivateKey,
 		localPublicKey:  localPublicKey,
-		rootChain:       rootChain,
-		sendingChain:    sendingChain,
-		receivingChain:  receivingChain,
-		cfg:             cfg,
 	}
 
-	return ratchet, nil
+	ratchet.cfg, err = newConfig(options...)
+	if err != nil {
+		return ratchet, fmt.Errorf("new config: %w", err)
+	}
+
+	ratchet.rootChain, err = rootchain.New(rootKey, ratchet.cfg.rootOptions...)
+	if err != nil {
+		return ratchet, fmt.Errorf("new root chain: %w", err)
+	}
+
+	ratchet.sendingChain, err = sendingchain.New(
+		nil,
+		nil,
+		sendingChainNextHeaderKey,
+		0,
+		0,
+		ratchet.cfg.sendingOptions...,
+	)
+	if err != nil {
+		return ratchet, fmt.Errorf("new sending chain: %w", err)
+	}
+
+	ratchet.receivingChain, err = receivingchain.New(
+		nil,
+		nil,
+		receivingChainNextHeaderKey,
+		0,
+		ratchet.cfg.receivingOptions...,
+	)
+	if err != nil {
+		return ratchet, fmt.Errorf("new receiving chain: %w", err)
+	}
+
+	return ratchet, err
 }
 
 // TODO: try to reduce arguments count.
@@ -73,54 +82,60 @@ func NewSender(
 	sendingChainHeaderKey keys.Header,
 	receivingChainNextHeaderKey keys.Header,
 	options ...Option,
-) (Ratchet, error) {
-	cfg, err := newConfig(options...)
-	if err != nil {
-		return Ratchet{}, fmt.Errorf("new config: %w", err)
-	}
-
-	localPrivateKey, localPublicKey, err := cfg.crypto.GenerateKeyPair()
-	if err != nil {
-		return Ratchet{}, fmt.Errorf("%w: generate key pair: %w", errlist.ErrCrypto, err)
-	}
-
-	sharedKey, err := cfg.crypto.ComputeSharedKey(localPrivateKey, remotePublicKey)
-	if err != nil {
-		return Ratchet{}, fmt.Errorf("%w: compute shared key: %w", errlist.ErrCrypto, err)
-	}
-
-	rootChain, err := rootchain.New(rootKey, cfg.rootOptions...)
-	if err != nil {
-		return Ratchet{}, fmt.Errorf("new root chain: %w", err)
-	}
-
-	sendingChainKey, sendingChainNextHeaderKey, err := rootChain.Advance(sharedKey)
-	if err != nil {
-		return Ratchet{}, fmt.Errorf("advance root chain: %w", err)
-	}
-
-	sendingChain, err := sendingchain.New(
-		&sendingChainKey, &sendingChainHeaderKey, sendingChainNextHeaderKey, 0, 0, cfg.sendingOptions...)
-	if err != nil {
-		return Ratchet{}, fmt.Errorf("new sending chain: %w", err)
-	}
-
-	receivingChain, err := receivingchain.New(nil, nil, receivingChainNextHeaderKey, 0, cfg.receivingOptions...)
-	if err != nil {
-		return Ratchet{}, fmt.Errorf("new receiving chain: %w", err)
-	}
-
-	ratchet := Ratchet{
-		localPrivateKey: localPrivateKey,
-		localPublicKey:  localPublicKey,
+) (ratchet Ratchet, err error) {
+	ratchet = Ratchet{
 		remotePublicKey: &remotePublicKey,
-		rootChain:       rootChain,
-		sendingChain:    sendingChain,
-		receivingChain:  receivingChain,
-		cfg:             cfg,
 	}
 
-	return ratchet, nil
+	ratchet.cfg, err = newConfig(options...)
+	if err != nil {
+		return ratchet, fmt.Errorf("new config: %w", err)
+	}
+
+	ratchet.localPrivateKey, ratchet.localPublicKey, err = ratchet.cfg.crypto.GenerateKeyPair()
+	if err != nil {
+		return ratchet, fmt.Errorf("%w: generate key pair: %w", errlist.ErrCrypto, err)
+	}
+
+	sharedKey, err := ratchet.cfg.crypto.ComputeSharedKey(ratchet.localPrivateKey, remotePublicKey)
+	if err != nil {
+		return ratchet, fmt.Errorf("%w: compute shared key: %w", errlist.ErrCrypto, err)
+	}
+
+	ratchet.rootChain, err = rootchain.New(rootKey, ratchet.cfg.rootOptions...)
+	if err != nil {
+		return ratchet, fmt.Errorf("new root chain: %w", err)
+	}
+
+	sendingChainKey, sendingChainNextHeaderKey, err := ratchet.rootChain.Advance(sharedKey)
+	if err != nil {
+		return ratchet, fmt.Errorf("advance root chain: %w", err)
+	}
+
+	ratchet.sendingChain, err = sendingchain.New(
+		&sendingChainKey,
+		&sendingChainHeaderKey,
+		sendingChainNextHeaderKey,
+		0,
+		0,
+		ratchet.cfg.sendingOptions...,
+	)
+	if err != nil {
+		return ratchet, fmt.Errorf("new sending chain: %w", err)
+	}
+
+	ratchet.receivingChain, err = receivingchain.New(
+		nil,
+		nil,
+		receivingChainNextHeaderKey,
+		0,
+		ratchet.cfg.receivingOptions...,
+	)
+	if err != nil {
+		return ratchet, fmt.Errorf("new receiving chain: %w", err)
+	}
+
+	return ratchet, err
 }
 
 func (r Ratchet) Clone() Ratchet {
@@ -134,18 +149,32 @@ func (r Ratchet) Clone() Ratchet {
 	return r
 }
 
-func (r *Ratchet) Decrypt(encryptedHeader, encryptedData, auth []byte) (data []byte, err error) {
+func (r *Ratchet) Decrypt(
+	encryptedHeader []byte,
+	encryptedData []byte,
+	auth []byte,
+) (decryptedData []byte, err error) {
 	err = utils.UpdateWithTx(r, r.Clone(), func(r *Ratchet) error {
-		data, err = r.receivingChain.Decrypt(encryptedHeader, encryptedData, auth, r.ratchetReceivingChain)
+		decryptedData, err = r.receivingChain.Decrypt(
+			encryptedHeader,
+			encryptedData,
+			auth,
+			r.ratchetReceivingChain,
+		)
+
 		return err
 	})
 
-	return data, err
+	return decryptedData, err
 }
 
-func (r *Ratchet) Encrypt(data, auth []byte) (encryptedHeader []byte, encryptedData []byte, err error) {
+func (r *Ratchet) Encrypt(
+	data []byte,
+	auth []byte,
+) (encryptedHeader []byte, encryptedData []byte, err error) {
 	err = utils.UpdateWithTx(r, r.Clone(), func(r *Ratchet) error {
-		if err := r.ratchetSendingChainIfNeeded(); err != nil {
+		err = r.ratchetSendingChainIfNeeded()
+		if err != nil {
 			return fmt.Errorf("ratchet sending chain: %w", err)
 		}
 
@@ -158,7 +187,7 @@ func (r *Ratchet) Encrypt(data, auth []byte) (encryptedHeader []byte, encryptedD
 	return encryptedHeader, encryptedData, err
 }
 
-func (r *Ratchet) ratchetReceivingChain(remotePublicKey keys.Public) error {
+func (r *Ratchet) ratchetReceivingChain(remotePublicKey keys.Public) (err error) {
 	r.remotePublicKey = &remotePublicKey
 
 	sharedKey, err := r.cfg.crypto.ComputeSharedKey(r.localPrivateKey, remotePublicKey)

@@ -5,18 +5,23 @@ import (
 	"testing"
 )
 
+var rootCloneTests = []struct {
+	name string
+	key  Root
+}{
+	{"zero root key", Root{}},
+	{
+		"non-empty root key",
+		Root{
+			Bytes: []byte{1, 2, 3, 4, 5},
+		},
+	},
+}
+
 func TestRootClone(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name string
-		key  Root
-	}{
-		{"zero root key", Root{}},
-		{"full root key", Root{Bytes: []byte{1, 2, 3, 4, 5}}},
-	}
-
-	for _, test := range tests {
+	for _, test := range rootCloneTests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 

@@ -3,8 +3,8 @@ package rootchain
 import (
 	"fmt"
 
-	"github.com/platform-inf/go-ratchet/errlist"
-	"github.com/platform-inf/go-ratchet/keys"
+	"github.com/lyreware/go-ratchet/errlist"
+	"github.com/lyreware/go-ratchet/keys"
 )
 
 type Chain struct {
@@ -12,24 +12,26 @@ type Chain struct {
 	cfg     config
 }
 
-func New(rootKey keys.Root, options ...Option) (Chain, error) {
-	cfg, err := newConfig(options...)
-	if err != nil {
-		return Chain{}, fmt.Errorf("new config: %w", err)
+func New(rootKey keys.Root, options ...Option) (chain Chain, err error) {
+	chain = Chain{
+		rootKey: rootKey,
 	}
 
-	return Chain{rootKey: rootKey, cfg: cfg}, nil
+	chain.cfg, err = newConfig(options...)
+	if err != nil {
+		return chain, fmt.Errorf("new config: %w", err)
+	}
+
+	return chain, err
 }
 
-func (ch *Chain) Advance(sharedKey keys.Shared) (keys.MessageMaster, keys.Header, error) {
-	newRootKey, messageMasterKey, nextHeaderKey, err := ch.cfg.crypto.AdvanceChain(ch.rootKey, sharedKey)
+func (ch *Chain) Advance(sharedKey keys.Shared) (masterKey keys.Master, nextHeaderKey keys.Header, err error) {
+	ch.rootKey, masterKey, nextHeaderKey, err = ch.cfg.crypto.AdvanceChain(ch.rootKey, sharedKey)
 	if err != nil {
-		return keys.MessageMaster{}, keys.Header{}, fmt.Errorf("%w: advance: %w", errlist.ErrCrypto, err)
+		return masterKey, nextHeaderKey, fmt.Errorf("%w: advance: %w", errlist.ErrCrypto, err)
 	}
 
-	ch.rootKey = newRootKey
-
-	return messageMasterKey, nextHeaderKey, nil
+	return masterKey, nextHeaderKey, err
 }
 
 func (ch Chain) Clone() Chain {

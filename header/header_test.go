@@ -6,42 +6,42 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/platform-inf/go-ratchet/errlist"
-	"github.com/platform-inf/go-ratchet/keys"
+	"github.com/lyreware/go-ratchet/errlist"
+	"github.com/lyreware/go-ratchet/keys"
 )
 
-func TestHeaderSuccessEncodeAndDecode(t *testing.T) {
+var headerSuccessEncodeAndDecodeTests = []struct {
+	name   string
+	header Header
+	bytes  []byte
+}{
+	{
+		"full header",
+		Header{
+			PublicKey:                         keys.Public{Bytes: []byte{0x01, 0x02, 0x03, 0x04, 0x05}},
+			PreviousSendingChainMessagesCount: 123,
+			MessageNumber:                     321,
+		},
+		[]byte{
+			0x41, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x7b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x01, 0x02, 0x03, 0x04, 0x05,
+		},
+	},
+	{
+		"zero header",
+		Header{},
+		[]byte{
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		},
+	},
+}
+
+func TestSuccessEncodeAndDecode(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name   string
-		header Header
-		bytes  []byte
-	}{
-		{
-			"full header",
-			Header{
-				PublicKey:                         keys.Public{Bytes: []byte{0x01, 0x02, 0x03, 0x04, 0x05}},
-				PreviousSendingChainMessagesCount: 123,
-				MessageNumber:                     321,
-			},
-			[]byte{
-				0x41, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x7b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x01, 0x02, 0x03, 0x04, 0x05,
-			},
-		},
-		{
-			"zero header",
-			Header{},
-			[]byte{
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			},
-		},
-	}
-
-	for _, test := range tests {
+	for _, test := range successEncodeAndDecodeTests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -62,32 +62,38 @@ func TestHeaderSuccessEncodeAndDecode(t *testing.T) {
 	}
 }
 
-func TestHeaderDecode(t *testing.T) {
+var decodeTests = []struct {
+	name          string
+	bytes         []byte
+	errorCategory error
+	errorString   string
+}{
+	{
+		"not enough bytes",
+		[]byte{
+			0x12, 0x00, 0x00, 0x00, 0x22, 0x00, 0x00, 0x0F,
+			0x55, 0x00, 0x00, 0x00, 0x77, 0x00, 0x0B,
+		},
+		errlist.ErrInvalidValue,
+		"invalid value: not enough bytes",
+	},
+	{
+		"nil bytes slice",
+		nil,
+		errlist.ErrInvalidValue,
+		"invalid value: not enough bytes",
+	},
+}
+
+func TestDecode(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name          string
-		bytes         []byte
-		errorCategory error
-		errorString   string
-	}{
-		{
-			"not enough bytes",
-			[]byte{
-				0x12, 0x00, 0x00, 0x00, 0x22, 0x00, 0x00, 0x0F,
-				0x55, 0x00, 0x00, 0x00, 0x77, 0x00, 0x0B,
-			},
-			errlist.ErrInvalidValue,
-			"invalid value: not enough bytes",
-		},
-		{"nil bytes slice", nil, errlist.ErrInvalidValue, "invalid value: not enough bytes"},
-	}
-
-	for _, test := range tests {
+	for _, test := range decodeTests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			if _, err := Decode(test.bytes); !errors.Is(err, test.errorCategory) || err.Error() != test.errorString {
+			_, err := Decode(test.bytes)
+			if !errors.Is(err, test.errorCategory) || err.Error() != test.errorString {
 				t.Fatalf("Decode(%v) expected error %q but got %v", test.bytes, test.errorString, err)
 			}
 		})

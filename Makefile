@@ -6,7 +6,7 @@ bin/:
 	mkdir -p $@
 
 bin/golangci-lint: | bin/
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/main/install.sh | sh -s "v2.2.1"
 
 .PHONY: clean
 clean:

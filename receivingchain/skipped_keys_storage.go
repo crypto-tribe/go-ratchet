@@ -3,7 +3,7 @@ package receivingchain
 import (
 	"fmt"
 
-	"github.com/platform-inf/go-ratchet/keys"
+	"github.com/lyreware/go-ratchet/keys"
 )
 
 const (
@@ -39,14 +39,22 @@ func newDefaultSkippedKeysStorage() defaultSkippedKeysStorage {
 	return make(defaultSkippedKeysStorage)
 }
 
-func (st defaultSkippedKeysStorage) Add(headerKey keys.Header, messageNumber uint64, messageKey keys.Message) error {
+func (st defaultSkippedKeysStorage) Add(
+	headerKey keys.Header,
+	messageNumber uint64,
+	messageKey keys.Message,
+) (err error) {
 	if len(st) >= defaultSkippedKeysStorageHeaderKeysLenToClear {
 		clear(st)
 	}
 
 	stKey := st.convertToKey(headerKey)
 	if len(st[stKey]) >= defaultSkippedKeysStorageMessageKeysLenLimit {
-		return fmt.Errorf("too many message keys: %d >= %d", len(st[stKey]), defaultSkippedKeysStorageMessageKeysLenLimit)
+		return fmt.Errorf(
+			"too many message keys: %d >= %d",
+			len(st[stKey]),
+			defaultSkippedKeysStorageMessageKeysLenLimit,
+		)
 	}
 
 	if _, ok := st[stKey]; !ok {
@@ -55,7 +63,7 @@ func (st defaultSkippedKeysStorage) Add(headerKey keys.Header, messageNumber uin
 
 	st[stKey][messageNumber] = messageKey
 
-	return nil
+	return err
 }
 
 func (st defaultSkippedKeysStorage) Clone() SkippedKeysStorage {
@@ -74,15 +82,15 @@ func (st defaultSkippedKeysStorage) Clone() SkippedKeysStorage {
 	return stClone
 }
 
-func (st defaultSkippedKeysStorage) Delete(headerKey keys.Header, messageNumber uint64) error {
+func (st defaultSkippedKeysStorage) Delete(headerKey keys.Header, messageNumber uint64) (err error) {
 	stKey := st.convertToKey(headerKey)
 	delete(st[stKey], messageNumber)
 
-	return nil
+	return err
 }
 
-func (st defaultSkippedKeysStorage) GetIter() (SkippedKeysIter, error) {
-	iter := func(yield SkippedKeysYield) {
+func (st defaultSkippedKeysStorage) GetIter() (iter SkippedKeysIter, err error) {
+	iter = func(yield SkippedKeysYield) {
 		for stKey, messageNumberKeys := range st {
 			headerKey := st.convertFromKey(stKey)
 
@@ -100,13 +108,15 @@ func (st defaultSkippedKeysStorage) GetIter() (SkippedKeysIter, error) {
 		}
 	}
 
-	return iter, nil
+	return iter, err
 }
 
-func (st defaultSkippedKeysStorage) convertToKey(headerKey keys.Header) string {
-	return string(headerKey.Bytes)
+func (st defaultSkippedKeysStorage) convertToKey(headerKey keys.Header) (key string) {
+	key = string(headerKey.Bytes)
+	return key
 }
 
-func (st defaultSkippedKeysStorage) convertFromKey(key string) keys.Header {
-	return keys.Header{Bytes: []byte(key)}
+func (st defaultSkippedKeysStorage) convertFromKey(key string) (headerKey keys.Header) {
+	headerKey.Bytes = []byte(key)
+	return headerKey
 }

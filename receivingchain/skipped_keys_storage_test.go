@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/platform-inf/go-ratchet/keys"
-	"github.com/platform-inf/go-utils"
+	"github.com/lyreware/go-ratchet/keys"
+	"github.com/lyreware/go-utils"
 )
 
 func TestDefaultSkippedKeysStorageAdd(t *testing.T) {
@@ -58,7 +58,12 @@ func TestDefaultSkippedKeysStorageAdd(t *testing.T) {
 
 		err := storage.Add(keys.Header{}, defaultSkippedKeysStorageMessageKeysLenLimit, keys.Message{})
 		if err == nil || err.Error() != errString {
-			t.Fatalf("Add(%d): expected error %q but got %+v", defaultSkippedKeysStorageMessageKeysLenLimit, errString, err)
+			t.Fatalf(
+				"Add(%d): expected error %q but got %+v",
+				defaultSkippedKeysStorageMessageKeysLenLimit,
+				errString,
+				err,
+			)
 		}
 	})
 }

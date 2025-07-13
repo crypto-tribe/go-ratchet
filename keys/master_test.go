@@ -5,18 +5,23 @@ import (
 	"testing"
 )
 
-func TestMessageMasterClone(t *testing.T) {
+var messageMasterCloneTests = []struct {
+	name string
+	key  Master
+}{
+	{"zero message master key", Master{}},
+	{
+		"non-empty message master key",
+		Master{
+			Bytes: []byte{1, 2, 3, 4, 5},
+		},
+	},
+}
+
+func TestMasterClone(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name string
-		key  MessageMaster
-	}{
-		{"zero message master key", MessageMaster{}},
-		{"full message master key", MessageMaster{Bytes: []byte{1, 2, 3, 4, 5}}},
-	}
-
-	for _, test := range tests {
+	for _, test := range messageMasterCloneTests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -32,19 +37,19 @@ func TestMessageMasterClone(t *testing.T) {
 	}
 }
 
-func TestMessageMasterClonePtr(t *testing.T) {
+var messageMasterClonePtrTests = []struct {
+	name string
+	key  *Master
+}{
+	{"nil ptr to message master key", nil},
+	{"ptr to zero message master key", &Master{}},
+	{"ptr to non-empty message master key", &Master{Bytes: []byte{1, 2, 3, 4, 5}}},
+}
+
+func TestMasterClonePtr(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name string
-		key  *MessageMaster
-	}{
-		{"nil ptr to message master key", nil},
-		{"ptr to zero message master key", &MessageMaster{}},
-		{"ptr to full message master key", &MessageMaster{Bytes: []byte{1, 2, 3, 4, 5}}},
-	}
-
-	for _, test := range tests {
+	for _, test := range messageMasterClonePtrTests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
