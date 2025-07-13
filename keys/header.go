@@ -10,6 +10,7 @@ type Header struct {
 
 func (hk Header) Clone() Header {
 	hk.Bytes = slices.CloneBytes(hk.Bytes)
+
 	return hk
 }
 

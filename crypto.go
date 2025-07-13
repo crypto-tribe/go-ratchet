@@ -17,8 +17,8 @@ type defaultCrypto struct {
 	curve ecdh.Curve
 }
 
-func newDefaultCrypto() (crypto defaultCrypto) {
-	crypto = defaultCrypto{
+func newDefaultCrypto() defaultCrypto {
+	crypto := defaultCrypto{
 		curve: ecdh.X25519(),
 	}
 
@@ -28,42 +28,42 @@ func newDefaultCrypto() (crypto defaultCrypto) {
 func (c defaultCrypto) ComputeSharedKey(
 	privateKey keys.Private,
 	publicKey keys.Public,
-) (sharedKey keys.Shared, err error) {
+) (keys.Shared, error) {
 	foreignPrivateKey, err := c.curve.NewPrivateKey(privateKey.Bytes)
 	if err != nil {
-		return sharedKey, fmt.Errorf("map to foreign private key: %w", err)
+		return keys.Shared{}, fmt.Errorf("map to foreign private key: %w", err)
 	}
 
 	foreignPublicKey, err := c.curve.NewPublicKey(publicKey.Bytes)
 	if err != nil {
-		return sharedKey, fmt.Errorf("map to foreign public key: %w", err)
+		return keys.Shared{}, fmt.Errorf("map to foreign public key: %w", err)
 	}
 
 	sharedKeyBytes, err := foreignPrivateKey.ECDH(foreignPublicKey)
 	if err != nil {
-		return sharedKey, fmt.Errorf("Diffie-Hellman: %w", err)
+		return keys.Shared{}, fmt.Errorf("Diffie-Hellman: %w", err)
 	}
 
-	sharedKey = keys.Shared{
+	sharedKey := keys.Shared{
 		Bytes: sharedKeyBytes,
 	}
 
-	return sharedKey, err
+	return sharedKey, nil
 }
 
-func (c defaultCrypto) GenerateKeyPair() (privateKey keys.Private, publicKey keys.Public, err error) {
+func (c defaultCrypto) GenerateKeyPair() (keys.Private, keys.Public, error) {
 	foreignPrivateKey, err := c.curve.GenerateKey(rand.Reader)
 	if err != nil {
-		return privateKey, publicKey, err
+		return keys.Private{}, keys.Public{}, nil
 	}
 
-	privateKey = keys.Private{
+	privateKey := keys.Private{
 		Bytes: foreignPrivateKey.Bytes(),
 	}
 
-	publicKey = keys.Public{
+	publicKey := keys.Public{
 		Bytes: foreignPrivateKey.PublicKey().Bytes(),
 	}
 
-	return privateKey, publicKey, err
+	return privateKey, publicKey, nil
 }

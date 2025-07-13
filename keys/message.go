@@ -10,5 +10,6 @@ type Message struct {
 
 func (mk Message) Clone() Message {
 	mk.Bytes = slices.CloneBytes(mk.Bytes)
+
 	return mk
 }

@@ -11,30 +11,30 @@ import (
 	"github.com/lyreware/go-ratchet/receivingchain"
 	"github.com/lyreware/go-ratchet/rootchain"
 	"github.com/lyreware/go-ratchet/sendingchain"
-	"github.com/lyreware/go-utils"
+	"github.com/lyreware/go-utils/check"
 )
 
 type testCrypto struct{}
 
-func (tc testCrypto) ComputeSharedKey(_ keys.Private, _ keys.Public) (keys.Shared, error) {
+func (testCrypto) ComputeSharedKey(_ keys.Private, _ keys.Public) (keys.Shared, error) {
 	return keys.Shared{}, nil
 }
 
-func (tc testCrypto) GenerateKeyPair() (keys.Private, keys.Public, error) {
+func (testCrypto) GenerateKeyPair() (keys.Private, keys.Public, error) {
 	return keys.Private{}, keys.Public{}, nil
 }
 
 type testReceivingChainCrypto struct{}
 
-func (tc testReceivingChainCrypto) AdvanceChain(_ keys.Master) (keys.Master, keys.Message, error) {
+func (testReceivingChainCrypto) AdvanceChain(_ keys.Master) (keys.Master, keys.Message, error) {
 	return keys.Master{}, keys.Message{}, nil
 }
 
-func (tc testReceivingChainCrypto) DecryptHeader(_ keys.Header, _ []byte) (header.Header, error) {
+func (testReceivingChainCrypto) DecryptHeader(_ keys.Header, _ []byte) (header.Header, error) {
 	return header.Header{}, nil
 }
 
-func (tc testReceivingChainCrypto) DecryptMessage(_ keys.Message, _, _ []byte) ([]byte, error) {
+func (testReceivingChainCrypto) DecryptMessage(_ keys.Message, _, _ []byte) ([]byte, error) {
 	return nil, nil
 }
 
@@ -72,7 +72,7 @@ func TestNewConfig(t *testing.T) {
 			t.Fatalf("newConfig() expected no error but got %v", err)
 		}
 
-		if utils.IsNil(cfg.crypto) {
+		if check.IsNil(cfg.crypto) {
 			t.Fatal("newConfig() sets no default value for crypto")
 		}
 	})

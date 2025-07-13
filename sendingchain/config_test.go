@@ -1,4 +1,4 @@
-package sendingchain_test
+package sendingchain
 
 import (
 	"errors"
@@ -13,15 +13,15 @@ import (
 
 type testCrypto struct{}
 
-func (tc testCrypto) AdvanceChain(_ keys.Master) (keys.Master, keys.Message, error) {
+func (testCrypto) AdvanceChain(_ keys.Master) (keys.Master, keys.Message, error) {
 	return keys.Master{}, keys.Message{}, nil
 }
 
-func (tc testCrypto) EncryptHeader(_ keys.Header, _ header.Header) ([]byte, error) {
+func (testCrypto) EncryptHeader(_ keys.Header, _ header.Header) ([]byte, error) {
 	return nil, nil
 }
 
-func (tc testCrypto) EncryptMessage(_ keys.Message, _, _ []byte) ([]byte, error) {
+func (testCrypto) EncryptMessage(_ keys.Message, _, _ []byte) ([]byte, error) {
 	return nil, nil
 }
 
@@ -49,7 +49,7 @@ func TestNewConfigWithCryptoOptionSuccess(t *testing.T) {
 	if reflect.TypeOf(cfg.crypto) != reflect.TypeOf(testCrypto{}) {
 		t.Fatal("WithCrypto() option did not set passed crypto")
 	}
-)
+}
 
 func TestNewConfigWithCryptoOptionError(t *testing.T) {
 	t.Parallel()

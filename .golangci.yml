@@ -75,7 +75,6 @@ linters:
     - staticcheck # is a go vet on steroids, applying a ton of static analysis checks
     - testableexamples # checks if examples are testable (have an expected output)
     - testifylint # checks usage of github.com/stretchr/testify
-    - testpackage # makes you use a separate _test package
     - tparallel # detects inappropriate usage of t.Parallel() method in your Go test codes
     - unconvert # removes unnecessary type conversions
     - unparam # reports unused function parameters
@@ -107,7 +106,11 @@ linters:
   exclusions:
     rules:
       - path: _test\.go
-        text: "avoid magic numbers like"
+        text: "create a named constant for it"
+        linters:
+          - revive
+      - path: \.go
+        text: "appears, at least,"
         linters:
           - revive
 
@@ -248,9 +251,11 @@ linters:
       rules:
         - name: add-constant
           arguments:
-            - allow-ints: "0"
+            - allow-ints: "0,2,32,64"
         - name: cognitive-complexity
           arguments: [20]
+        - name: function-result-limit
+          arguments: [4]
         - name: line-length-limit
           arguments: [100]
         - name: package-comments

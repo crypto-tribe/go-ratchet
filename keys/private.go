@@ -10,5 +10,6 @@ type Private struct {
 
 func (pk Private) Clone() Private {
 	pk.Bytes = slices.CloneBytes(pk.Bytes)
+
 	return pk
 }

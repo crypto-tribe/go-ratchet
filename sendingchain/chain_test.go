@@ -1,15 +1,14 @@
-package sendingchain_test
+package sendingchain
 
 import (
 	"errors"
 	"reflect"
 	"testing"
 
-	cipher "golang.org/x/crypto/chacha20poly1305"
-
 	"github.com/lyreware/go-ratchet/errlist"
 	"github.com/lyreware/go-ratchet/header"
 	"github.com/lyreware/go-ratchet/keys"
+	cipher "golang.org/x/crypto/chacha20poly1305"
 )
 
 type newChainTestArgs struct {
@@ -27,7 +26,7 @@ var newChainTests = []struct {
 	errCategories []error
 	errString     string
 }{
-	{"zero args and no options", args{}, nil, ""},
+	{"zero args and no options", newChainTestArgs{}, nil, ""},
 	{
 		"full args and crypto option",
 		newChainTestArgs{
@@ -79,22 +78,38 @@ func TestNewChain(t *testing.T) {
 				test.args.previousChainMessagesCount,
 				test.args.options...,
 			)
-			if (err == nil && test.errString != "") || (err != nil && err.Error() != test.errString) {
+			if (err == nil && test.errString != "") ||
+				(err != nil && err.Error() != test.errString) {
 				t.Fatalf("New(%+v): expected error %q but got %+v", test.args, test.errString, err)
 			}
 
 			for _, errCategory := range test.errCategories {
 				if !errors.Is(err, errCategory) {
-					t.Fatalf("New(%+v): expected error category %v but got %v", test.args, errCategory, err)
+					t.Fatalf(
+						"New(%+v): expected error category %v but got %v",
+						test.args,
+						errCategory,
+						err,
+					)
 				}
 			}
 
 			if !reflect.DeepEqual(chain.masterKey, test.args.masterKey) {
-				t.Fatalf("New(%+v): invalid master key: %v != %v", test.args, test.args.masterKey, chain.masterKey)
+				t.Fatalf(
+					"New(%+v): invalid master key: %v != %v",
+					test.args,
+					test.args.masterKey,
+					chain.masterKey,
+				)
 			}
 
 			if !reflect.DeepEqual(chain.headerKey, test.args.headerKey) {
-				t.Fatalf("New(%+v): invalid header key: %v != %v", test.args, test.args.headerKey, chain.headerKey)
+				t.Fatalf(
+					"New(%+v): invalid header key: %v != %v",
+					test.args,
+					test.args.headerKey,
+					chain.headerKey,
+				)
 			}
 
 			if !reflect.DeepEqual(chain.nextHeaderKey, test.args.nextHeaderKey) {
@@ -178,30 +193,51 @@ func TestChainClone(t *testing.T) {
 			clone := chain.Clone()
 
 			if !reflect.DeepEqual(clone.masterKey, chain.masterKey) {
-				t.Fatalf("%+v.Clone(): clone contains different master key: %+v", chain, clone.masterKey)
+				t.Fatalf(
+					"%+v.Clone(): clone contains different master key: %+v",
+					chain,
+					clone.masterKey,
+				)
 			}
 
 			if chain.masterKey != nil &&
 				len(chain.masterKey.Bytes) > 0 &&
 				&chain.masterKey.Bytes[0] == &clone.masterKey.Bytes[0] {
-				t.Fatalf("%+v.Clone(): clone contains same master key memory pointer %v", chain, clone.masterKey)
+				t.Fatalf(
+					"%+v.Clone(): clone contains same master key memory pointer %v",
+					chain,
+					clone.masterKey,
+				)
 			}
 
 			if !reflect.DeepEqual(clone.headerKey, chain.headerKey) {
-				t.Fatalf("%+v.Clone(): clone contains different header key: %+v", chain, clone.headerKey)
+				t.Fatalf(
+					"%+v.Clone(): clone contains different header key: %+v",
+					chain,
+					clone.headerKey,
+				)
 			}
 
 			if chain.headerKey != nil &&
 				len(chain.headerKey.Bytes) > 0 &&
 				&chain.headerKey.Bytes[0] == &clone.headerKey.Bytes[0] {
-				t.Fatalf("%+v.Clone(): clone contains same header key memory pointer %v", chain, clone.headerKey)
+				t.Fatalf(
+					"%+v.Clone(): clone contains same header key memory pointer %v",
+					chain,
+					clone.headerKey,
+				)
 			}
 
 			if !reflect.DeepEqual(clone.nextHeaderKey, chain.nextHeaderKey) {
-				t.Fatalf("%+v.Clone(): clone contains different next header key: %+v", chain, clone.nextHeaderKey)
+				t.Fatalf(
+					"%+v.Clone(): clone contains different next header key: %+v",
+					chain,
+					clone.nextHeaderKey,
+				)
 			}
 
-			if len(chain.nextHeaderKey.Bytes) > 0 && &chain.nextHeaderKey.Bytes[0] == &clone.nextHeaderKey.Bytes[0] {
+			if len(chain.nextHeaderKey.Bytes) > 0 &&
+				&chain.nextHeaderKey.Bytes[0] == &clone.nextHeaderKey.Bytes[0] {
 				t.Fatalf(
 					"%+v.Clone(): clone contains same next header key key memory pointer %v",
 					chain,
@@ -221,7 +257,8 @@ func TestChainEncryptWithNilHeaderKey(t *testing.T) {
 	}
 
 	_, _, err = chain.Encrypt(header.Header{}, []byte{1, 2, 3}, []byte{4, 5, 6})
-	if !errors.Is(err, errlist.ErrInvalidValue) || err.Error() != "invalid value: header key is nil" {
+	if !errors.Is(err, errlist.ErrInvalidValue) ||
+		err.Error() != "invalid value: header key is nil" {
 		t.Fatalf("%+v.Encrypt() expected header key nil error but got %+v", chain, err)
 	}
 }
@@ -319,7 +356,11 @@ func TestChainEncryptSuccess(t *testing.T) {
 
 			header := chain.PrepareHeader(test.headerPublicKey)
 			if header.MessageNumber != uint64(testIndex) {
-				t.Fatalf("expected header message number %d but got %d", testIndex, header.MessageNumber)
+				t.Fatalf(
+					"expected header message number %d but got %d",
+					testIndex,
+					header.MessageNumber,
+				)
 			}
 
 			encryptedHeader, encryptedData, err := chain.Encrypt(header, test.data, test.auth)
@@ -345,15 +386,33 @@ func TestChainEncryptSuccess(t *testing.T) {
 			}
 
 			if len(encryptedData) == 0 {
-				t.Fatalf("%+v.Encrypt(%+v, %v, %v) returned empty encrypted data", chain, header, test.data, test.auth)
+				t.Fatalf(
+					"%+v.Encrypt(%+v, %v, %v) returned empty encrypted data",
+					chain,
+					header,
+					test.data,
+					test.auth,
+				)
 			}
 
 			if reflect.DeepEqual(encryptedHeader, header.Encode()) {
-				t.Fatalf("%+v.Encrypt(%+v, %v, %v) returned input header bytes", chain, header, test.data, test.auth)
+				t.Fatalf(
+					"%+v.Encrypt(%+v, %v, %v) returned input header bytes",
+					chain,
+					header,
+					test.data,
+					test.auth,
+				)
 			}
 
 			if reflect.DeepEqual(encryptedData, test.data) {
-				t.Fatalf("%+v.Encrypt(%+v, %v, %v) returned input data", chain, header, test.data, test.auth)
+				t.Fatalf(
+					"%+v.Encrypt(%+v, %v, %v) returned input data",
+					chain,
+					header,
+					test.data,
+					test.auth,
+				)
 			}
 		})
 	}
@@ -365,7 +424,7 @@ type chainPrepareHeaderTestArgs struct {
 	previousChainMessagesCount uint64
 }
 
-chainPrepareHeaderTests = []struct {
+var chainPrepareHeaderTests = []struct {
 	name   string
 	args   chainPrepareHeaderTestArgs
 	header header.Header
@@ -373,7 +432,7 @@ chainPrepareHeaderTests = []struct {
 	{"zero args and header", chainPrepareHeaderTestArgs{}, header.Header{}},
 	{
 		"full args and header",
-		args{
+		chainPrepareHeaderTestArgs{
 			keys.Public{
 				Bytes: []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
 			},
@@ -381,7 +440,7 @@ chainPrepareHeaderTests = []struct {
 			456,
 		},
 		header.Header{
-			PublicKey:                         keys.Public{
+			PublicKey: keys.Public{
 				Bytes: []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
 			},
 			MessageNumber:                     123,
@@ -437,15 +496,20 @@ func TestChainUpgrade(t *testing.T) {
 	}
 
 	masterKey := keys.Master{
-		Bytes: []byte{11, 22, 33}
+		Bytes: []byte{11, 22, 33},
 	}
 	nextHeaderKey := keys.Header{
-		Bytes: []byte{44, 55, 66, 77}
+		Bytes: []byte{44, 55, 66, 77},
 	}
 	chain.Upgrade(masterKey, nextHeaderKey)
 
 	if !reflect.DeepEqual(*chain.masterKey, masterKey) {
-		t.Fatalf("Upgrade(%+v, %+v): set different master key %+v", masterKey, nextHeaderKey, *chain.masterKey)
+		t.Fatalf(
+			"Upgrade(%+v, %+v): set different master key %+v",
+			masterKey,
+			nextHeaderKey,
+			*chain.masterKey,
+		)
 	}
 
 	if !reflect.DeepEqual(*chain.headerKey, oldNextHeaderKey) {
@@ -459,7 +523,12 @@ func TestChainUpgrade(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(chain.nextHeaderKey, nextHeaderKey) {
-		t.Fatalf("Upgrade(%+v, %+v): set different next header key %+v", masterKey, nextHeaderKey, chain.nextHeaderKey)
+		t.Fatalf(
+			"Upgrade(%+v, %+v): set different next header key %+v",
+			masterKey,
+			nextHeaderKey,
+			chain.nextHeaderKey,
+		)
 	}
 
 	if chain.nextMessageNumber != 0 {

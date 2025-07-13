@@ -7,7 +7,7 @@ import (
 	"github.com/lyreware/go-ratchet/receivingchain"
 	"github.com/lyreware/go-ratchet/rootchain"
 	"github.com/lyreware/go-ratchet/sendingchain"
-	"github.com/lyreware/go-utils"
+	"github.com/lyreware/go-utils/check"
 )
 
 type config struct {
@@ -17,61 +17,64 @@ type config struct {
 	sendingOptions   []sendingchain.Option
 }
 
-func newConfig(options ...Option) (cfg config, err error) {
-	cfg = config{
+func newConfig(options ...Option) (config, error) {
+	cfg := config{
 		crypto: newDefaultCrypto(),
 	}
 
-	err = cfg.applyOptions(options...)
+	err := cfg.applyOptions(options...)
 	if err != nil {
-		return cfg, fmt.Errorf("%w: %w", errlist.ErrOption, err)
+		return config{}, fmt.Errorf("%w: %w", errlist.ErrOption, err)
 	}
 
-	return cfg, err
+	return cfg, nil
 }
 
-func (cfg *config) applyOptions(options ...Option) (err error) {
+func (cfg *config) applyOptions(options ...Option) error {
 	for _, option := range options {
-		err = option(cfg)
+		err := option(cfg)
 		if err != nil {
 			return err
 		}
 	}
 
-	return err
+	return nil
 }
 
 type Option func(cfg *config) error
 
 func WithCrypto(crypto Crypto) Option {
-	return func(cfg *config) (err error) {
-		if utils.IsNil(crypto) {
+	return func(cfg *config) error {
+		if check.IsNil(crypto) {
 			return fmt.Errorf("%w: crypto is nil", errlist.ErrInvalidValue)
 		}
 
 		cfg.crypto = crypto
 
-		return err
+		return nil
 	}
 }
 
 func WithReceivingChainOptions(options ...receivingchain.Option) Option {
-	return func(cfg *config) (err error) {
+	return func(cfg *config) error {
 		cfg.receivingOptions = options
-		return err
+
+		return nil
 	}
 }
 
 func WithRootChainOptions(options ...rootchain.Option) Option {
-	return func(cfg *config) (err error) {
+	return func(cfg *config) error {
 		cfg.rootOptions = options
-		return err
+
+		return nil
 	}
 }
 
 func WithSendingChainOptions(options ...sendingchain.Option) Option {
-	return func(cfg *config) (err error) {
+	return func(cfg *config) error {
 		cfg.sendingOptions = options
-		return err
+
+		return nil
 	}
 }

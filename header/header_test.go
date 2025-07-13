@@ -10,7 +10,7 @@ import (
 	"github.com/lyreware/go-ratchet/keys"
 )
 
-var headerSuccessEncodeAndDecodeTests = []struct {
+var successEncodeAndDecodeTests = []struct {
 	name   string
 	header Header
 	bytes  []byte
@@ -18,7 +18,9 @@ var headerSuccessEncodeAndDecodeTests = []struct {
 	{
 		"full header",
 		Header{
-			PublicKey:                         keys.Public{Bytes: []byte{0x01, 0x02, 0x03, 0x04, 0x05}},
+			PublicKey: keys.Public{
+				Bytes: []byte{0x01, 0x02, 0x03, 0x04, 0x05},
+			},
 			PreviousSendingChainMessagesCount: 123,
 			MessageNumber:                     321,
 		},
@@ -94,7 +96,12 @@ func TestDecode(t *testing.T) {
 
 			_, err := Decode(test.bytes)
 			if !errors.Is(err, test.errorCategory) || err.Error() != test.errorString {
-				t.Fatalf("Decode(%v) expected error %q but got %v", test.bytes, test.errorString, err)
+				t.Fatalf(
+					"Decode(%v) expected error %q but got %v",
+					test.bytes,
+					test.errorString,
+					err,
+				)
 			}
 		})
 	}

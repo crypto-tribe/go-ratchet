@@ -8,20 +8,20 @@ import (
 	"github.com/lyreware/go-ratchet/errlist"
 	"github.com/lyreware/go-ratchet/header"
 	"github.com/lyreware/go-ratchet/keys"
-	"github.com/lyreware/go-utils"
+	"github.com/lyreware/go-utils/check"
 )
 
 type testCrypto struct{}
 
-func (tc testCrypto) AdvanceChain(_ keys.Master) (keys.Master, keys.Message, error) {
+func (testCrypto) AdvanceChain(_ keys.Master) (keys.Master, keys.Message, error) {
 	return keys.Master{}, keys.Message{}, nil
 }
 
-func (tc testCrypto) DecryptHeader(_ keys.Header, _ []byte) (header.Header, error) {
+func (testCrypto) DecryptHeader(_ keys.Header, _ []byte) (header.Header, error) {
 	return header.Header{}, nil
 }
 
-func (tc testCrypto) DecryptMessage(_ keys.Message, _, _ []byte) ([]byte, error) {
+func (testCrypto) DecryptMessage(_ keys.Message, _, _ []byte) ([]byte, error) {
 	return nil, nil
 }
 
@@ -35,6 +35,7 @@ func (ts *testSkippedKeysStorage) Add(_ keys.Header, _ uint64, _ keys.Message) e
 
 func (ts *testSkippedKeysStorage) Clone() SkippedKeysStorage {
 	ts.cloneCalled = true
+
 	return ts
 }
 
@@ -74,11 +75,11 @@ func TestNewDefaultConfig(t *testing.T) {
 		t.Fatalf("newConfig() expected no error but got %v", err)
 	}
 
-	if utils.IsNil(cfg.crypto) {
+	if check.IsNil(cfg.crypto) {
 		t.Fatal("newConfig() sets no default value for crypto")
 	}
 
-	if utils.IsNil(cfg.skippedKeysStorage) {
+	if check.IsNil(cfg.skippedKeysStorage) {
 		t.Fatal("newConfig() sets no default value for skipped keys storage")
 	}
 }

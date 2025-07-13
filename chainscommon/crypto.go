@@ -1,15 +1,14 @@
-package messagechainscommon
+package chainscommon
 
 import (
 	"fmt"
 	"hash"
 	"io"
 
+	"github.com/lyreware/go-ratchet/keys"
 	"golang.org/x/crypto/blake2b"
 	cipher "golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/hkdf"
-
-	"github.com/lyreware/go-ratchet/keys"
 )
 
 const cryptoMessageCipherKDFOutputLen = cipher.KeySize + cipher.NonceSizeX
@@ -30,20 +29,25 @@ func DeriveMessageCipherKeyAndNonce(messageKey keys.Message) (key []byte, nonce 
 		return hasher
 	}
 
-	kdf := hkdf.New(getHasher, messageKey.Bytes, cryptoMessageCipherKDFSalt, cryptoMessageCipherKDFInfo)
+	kdf := hkdf.New(
+		getHasher,
+		messageKey.Bytes,
+		cryptoMessageCipherKDFSalt,
+		cryptoMessageCipherKDFInfo,
+	)
 	kdfOutput := make([]byte, cryptoMessageCipherKDFOutputLen)
 
 	_, err = io.ReadFull(kdf, kdfOutput)
 	if err != nil {
-		return key, nonce, fmt.Errorf("KDF: %w", err)
+		return nil, nil, fmt.Errorf("KDF: %w", err)
 	}
 
 	if newHashErr != nil {
-		return key, nonce, fmt.Errorf("new hash: %w", newHashErr)
+		return nil, nil, fmt.Errorf("new hash: %w", newHashErr)
 	}
 
 	key = kdfOutput[:cipher.KeySize]
 	nonce = kdfOutput[cipher.KeySize:]
 
-	return key, nonce, err
+	return key, nonce, nil
 }

@@ -1,4 +1,4 @@
-package rootchain_test
+package rootchain
 
 import (
 	"errors"
@@ -7,7 +7,6 @@ import (
 
 	"github.com/lyreware/go-ratchet/errlist"
 	"github.com/lyreware/go-ratchet/keys"
-	"github.com/lyreware/go-ratchet/rootchain"
 )
 
 var newChainTests = []struct {
@@ -50,8 +49,9 @@ func TestNewChain(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			chain, err := rootchain.New(test.rootKey, test.options...)
-			if (err == nil && test.errString != "") || (err != nil && err.Error() != test.errString) {
+			_, err := New(test.rootKey, test.options...)
+			if (err == nil && test.errString != "") ||
+				(err != nil && err.Error() != test.errString) {
 				t.Fatalf(
 					"New(%+v, %+v): expected error %q but got %+v",
 					test.rootKey,
@@ -71,16 +71,6 @@ func TestNewChain(t *testing.T) {
 						err,
 					)
 				}
-			}
-
-			if !reflect.DeepEqual(chain.rootKey, test.rootKey) {
-				t.Fatalf(
-					"New(%+v, %+v): invalid root key: %v != %v",
-					test.rootKey,
-					test.options,
-					chain.rootKey,
-					test.rootKey,
-				)
 			}
 		})
 	}
@@ -102,7 +92,7 @@ var chainAdvanceTests = []struct {
 func TestChainAdvance(t *testing.T) {
 	t.Parallel()
 
-	chain, err := rootchain.New(
+	chain, err := New(
 		keys.Root{
 			Bytes: []byte{1, 2, 3, 4, 5},
 		},
@@ -117,7 +107,12 @@ func TestChainAdvance(t *testing.T) {
 
 			masterKey, nextHeaderKey, err := chain.Advance(test.sharedKey)
 			if err != nil {
-				t.Fatalf("%+v.Advance(%+v): expected no error but got %v", chain, test.sharedKey, err)
+				t.Fatalf(
+					"%+v.Advance(%+v): expected no error but got %v",
+					chain,
+					test.sharedKey,
+					err,
+				)
 			}
 
 			if len(masterKey.Bytes) == 0 {
@@ -130,7 +125,12 @@ func TestChainAdvance(t *testing.T) {
 			}
 
 			if len(nextHeaderKey.Bytes) == 0 {
-				t.Fatalf("%+v.Advance(%+v): returned empty next header key %v", chain, test.sharedKey, nextHeaderKey)
+				t.Fatalf(
+					"%+v.Advance(%+v): returned empty next header key %v",
+					chain,
+					test.sharedKey,
+					nextHeaderKey,
+				)
 			}
 		})
 	}
@@ -152,11 +152,11 @@ var chainCloneTests = []struct {
 func TestChainClone(t *testing.T) {
 	t.Parallel()
 
-	for _, test := range tests {
+	for _, test := range chainCloneTests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			chain, err := rootchain.New(test.rootKey)
+			chain, err := New(test.rootKey)
 			if err != nil {
 				t.Fatalf("New(): expected no error but got %v", err)
 			}
@@ -172,7 +172,11 @@ func TestChainClone(t *testing.T) {
 			}
 
 			if len(chain.rootKey.Bytes) > 0 && &chain.rootKey.Bytes[0] == &clone.rootKey.Bytes[0] {
-				t.Fatalf("%+v.Clone(): clone contains same root key memory pointer %v", chain, clone.rootKey)
+				t.Fatalf(
+					"%+v.Clone(): clone contains same root key memory pointer %v",
+					chain,
+					clone.rootKey,
+				)
 			}
 		})
 	}

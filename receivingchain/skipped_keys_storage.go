@@ -12,13 +12,20 @@ const (
 )
 
 type (
-	SkippedKeysIter  func(yield SkippedKeysYield)
+	// SkippedKeysIter passes key values to yield loop iteration.
+	SkippedKeysIter func(yield SkippedKeysYield)
+
+	// SkippedKeysYield represents loop iteration.
 	SkippedKeysYield func(headerKey keys.Header, messageNumberKeysIter SkippedMessageNumberKeysIter) bool
 
-	SkippedMessageNumberKeysIter  func(yield SkippedMessageNumberKeysYield)
+	// SkippedMessageNumberKeysIter passes message number and message key to yield loop iteration.
+	SkippedMessageNumberKeysIter func(yield SkippedMessageNumberKeysYield)
+
+	// SkippedMessageNumberKeysYield represents loop iteration.
 	SkippedMessageNumberKeysYield func(number uint64, key keys.Message) bool
 )
 
+// SkippedKeysStorage is the storage of skipped keys of the receiving chain.
 type SkippedKeysStorage interface {
 	// Add must add new skipped keys to storage.
 	Add(headerKey keys.Header, messageNumber uint64, messageKey keys.Message) error
@@ -43,7 +50,7 @@ func (st defaultSkippedKeysStorage) Add(
 	headerKey keys.Header,
 	messageNumber uint64,
 	messageKey keys.Message,
-) (err error) {
+) error {
 	if len(st) >= defaultSkippedKeysStorageHeaderKeysLenToClear {
 		clear(st)
 	}
@@ -63,7 +70,7 @@ func (st defaultSkippedKeysStorage) Add(
 
 	st[stKey][messageNumber] = messageKey
 
-	return err
+	return nil
 }
 
 func (st defaultSkippedKeysStorage) Clone() SkippedKeysStorage {
@@ -82,15 +89,15 @@ func (st defaultSkippedKeysStorage) Clone() SkippedKeysStorage {
 	return stClone
 }
 
-func (st defaultSkippedKeysStorage) Delete(headerKey keys.Header, messageNumber uint64) (err error) {
+func (st defaultSkippedKeysStorage) Delete(headerKey keys.Header, messageNumber uint64) error {
 	stKey := st.convertToKey(headerKey)
 	delete(st[stKey], messageNumber)
 
-	return err
+	return nil
 }
 
-func (st defaultSkippedKeysStorage) GetIter() (iter SkippedKeysIter, err error) {
-	iter = func(yield SkippedKeysYield) {
+func (st defaultSkippedKeysStorage) GetIter() (SkippedKeysIter, error) {
+	iter := func(yield SkippedKeysYield) {
 		for stKey, messageNumberKeys := range st {
 			headerKey := st.convertFromKey(stKey)
 
@@ -108,15 +115,17 @@ func (st defaultSkippedKeysStorage) GetIter() (iter SkippedKeysIter, err error) 
 		}
 	}
 
-	return iter, err
+	return iter, nil
 }
 
-func (st defaultSkippedKeysStorage) convertToKey(headerKey keys.Header) (key string) {
+func (defaultSkippedKeysStorage) convertToKey(headerKey keys.Header) (key string) {
 	key = string(headerKey.Bytes)
+
 	return key
 }
 
-func (st defaultSkippedKeysStorage) convertFromKey(key string) (headerKey keys.Header) {
+func (defaultSkippedKeysStorage) convertFromKey(key string) (headerKey keys.Header) {
 	headerKey.Bytes = []byte(key)
+
 	return headerKey
 }

@@ -10,6 +10,7 @@ type Public struct {
 
 func (pk Public) Clone() Public {
 	pk.Bytes = slices.CloneBytes(pk.Bytes)
+
 	return pk
 }
 

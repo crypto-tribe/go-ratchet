@@ -1,7 +1,5 @@
-github.com/lyreware/go-utils v0.1.1 h1:SfR5tBuMkrmZK2B0ul8NwuBp137nFcv3gXM0L3sYHrM=
-github.com/lyreware/go-utils v0.1.1/go.mod h1:mAmuH67c3IvLJDVFdg8JiBmK94pkY0nIwCV2tDltPmU=
-github.com/lyreware/go-utils v0.1.2 h1:a4TprwKR/hDxYAlo3qpxGD5NKWbzV4F1ubJ4wSwhPKg=
-github.com/lyreware/go-utils v0.1.2/go.mod h1:mAmuH67c3IvLJDVFdg8JiBmK94pkY0nIwCV2tDltPmU=
+github.com/lyreware/go-utils v0.2.2 h1:a8VSG6eT+bppCw1uVyHkvAH8d01XwA8PonbX7Ul2nVg=
+github.com/lyreware/go-utils v0.2.2/go.mod h1:0CeAuSFgzGJ3w2xdsEcBD3kqAXzuBKT7reP7nxlVGvk=
 golang.org/x/crypto v0.36.0 h1:AnAEvhDddvBdpY+uR+MyHmuZzzNqXSe/GvuDeob5L34=
 golang.org/x/crypto v0.36.0/go.mod h1:Y4J0ReaxCR1IMaabaSMugxJES1EpwhBHhv2bDHklZvc=
 golang.org/x/sys v0.31.0 h1:ioabZlmFYtWhL+TRYpcnNlLwhyxaM9kWTDEmfnprqik=

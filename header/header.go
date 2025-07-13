@@ -16,32 +16,43 @@ type Header struct {
 	MessageNumber                     uint64
 }
 
-func Decode(headerBytes []byte) (header Header, err error) {
+func Decode(headerBytes []byte) (Header, error) {
 	if len(headerBytes) < 2*sizes.Uint64 {
-		return header, fmt.Errorf("%w: not enough bytes", errlist.ErrInvalidValue)
+		return Header{}, fmt.Errorf("%w: not enough bytes", errlist.ErrInvalidValue)
 	}
 
-	header = Header{
-		MessageNumber: binary.LittleEndian.Uint64(headerBytes[:utils.Uint64Size]),
-		PreviousSendingChainMessagesCount: binary.LittleEndian.Uint64(headerBytes[sizes.Uint64 : 2*sizes.Uint64]),
+	header := Header{
+		MessageNumber: binary.LittleEndian.Uint64(
+			headerBytes[:sizes.Uint64],
+		),
+		PreviousSendingChainMessagesCount: binary.LittleEndian.Uint64(
+			headerBytes[sizes.Uint64 : 2*sizes.Uint64],
+		),
 	}
 
-	if len(bytes) > 2*sizes.Uint64 {
+	if len(headerBytes) > 2*sizes.Uint64 {
 		header.PublicKey = keys.Public{
-			Bytes: bytes[2*sizes.Uint64:],
+			Bytes: headerBytes[2*sizes.Uint64:],
 		}
 	}
 
-	return header, err
+	return header, nil
 }
 
-func (h Header) Encode() (headerBytes []byte) {
-	var messageNumberBytes, previousMessagesCountBytes [sizes.Uint64]byte
+func (h Header) Encode() []byte {
+	var messageNumberBytes [sizes.Uint64]byte
+	binary.LittleEndian.PutUint64(
+		messageNumberBytes[:],
+		h.MessageNumber,
+	)
 
-	binary.LittleEndian.PutUint64(messageNumberBytes[:], h.MessageNumber)
-	binary.LittleEndian.PutUint64(previousMessagesCountBytes[:], h.PreviousSendingChainMessagesCount)
+	var previousMessagesCountBytes [sizes.Uint64]byte
+	binary.LittleEndian.PutUint64(
+		previousMessagesCountBytes[:],
+		h.PreviousSendingChainMessagesCount,
+	)
 
-	headerBytes = slices.ConcatBytes(
+	headerBytes := slices.ConcatBytes(
 		messageNumberBytes[:],
 		previousMessagesCountBytes[:],
 		h.PublicKey.Bytes,

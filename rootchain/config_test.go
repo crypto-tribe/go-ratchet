@@ -12,7 +12,10 @@ import (
 
 type testCrypto struct{}
 
-func (tc testCrypto) AdvanceChain(_ keys.Root, _ keys.Shared) (keys.Root, keys.Master, keys.Header, error) {
+func (tc testCrypto) AdvanceChain(
+	_ keys.Root,
+	_ keys.Shared,
+) (keys.Root, keys.Master, keys.Header, error) {
 	return keys.Root{}, keys.Master{}, keys.Header{}, nil
 }
 

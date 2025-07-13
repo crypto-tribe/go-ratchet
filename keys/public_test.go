@@ -49,7 +49,7 @@ var publicClonePtrTests = []struct {
 func TestPublicClonePtr(t *testing.T) {
 	t.Parallel()
 
-	for _, test := range publicCloneTests {
+	for _, test := range publicClonePtrTests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 

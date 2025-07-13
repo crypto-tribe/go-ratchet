@@ -1,13 +1,12 @@
-package sendingchain_test
+package sendingchain
 
 import (
 	"reflect"
 	"testing"
 
-	cipher "golang.org/x/crypto/chacha20poly1305"
-
 	"github.com/lyreware/go-ratchet/header"
 	"github.com/lyreware/go-ratchet/keys"
+	cipher "golang.org/x/crypto/chacha20poly1305"
 )
 
 var defaultCryptoAdvanceChainTests = []struct {
@@ -86,7 +85,7 @@ var defaultCryptoEncryptHeaderTests = []struct {
 			Bytes: make([]byte, cipher.KeySize),
 		},
 		header.Header{
-			PublicKey:                         keys.Public{
+			PublicKey: keys.Public{
 				Bytes: []byte{1, 2, 3, 4},
 			},
 			MessageNumber:                     222,
@@ -106,7 +105,8 @@ func TestDefaultCryptoEncryptHeader(t *testing.T) {
 			t.Parallel()
 
 			encryptedHeader, err := crypto.EncryptHeader(test.headerKey, test.header)
-			if (err == nil && test.errString != "") || (err != nil && err.Error() != test.errString) {
+			if (err == nil && test.errString != "") ||
+				(err != nil && err.Error() != test.errString) {
 				t.Fatalf(
 					"EncryptHeader(%+v, %+v): expected err %q but got %+v",
 					test.headerKey,
@@ -121,7 +121,11 @@ func TestDefaultCryptoEncryptHeader(t *testing.T) {
 			}
 
 			if len(encryptedHeader) == 0 {
-				t.Fatalf("EncryptHeader(%+v, %+v): returned empty bytes", test.headerKey, test.header)
+				t.Fatalf(
+					"EncryptHeader(%+v, %+v): returned empty bytes",
+					test.headerKey,
+					test.header,
+				)
 			}
 		})
 	}

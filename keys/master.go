@@ -10,6 +10,7 @@ type Master struct {
 
 func (mk Master) Clone() Master {
 	mk.Bytes = slices.CloneBytes(mk.Bytes)
+
 	return mk
 }
 

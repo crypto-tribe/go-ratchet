@@ -10,5 +10,6 @@ type Root struct {
 
 func (rk Root) Clone() Root {
 	rk.Bytes = slices.CloneBytes(rk.Bytes)
+
 	return rk
 }
