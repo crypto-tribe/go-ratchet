@@ -1,7 +1,7 @@
 package rootchain
 
 import (
-	"fmt"
+	"errors"
 	"hash"
 	"io"
 
@@ -10,9 +10,13 @@ import (
 	"golang.org/x/crypto/hkdf"
 )
 
-const defaultCryptoKDFOutputLen = 3 * 32
+const (
+	defaultCryptoKDFOutputLen = 3 * 32
+)
 
-var defaultCryptoKDFInfo = []byte("advance root chain")
+var (
+	defaultCryptoKDFInfo = []byte("advance root chain")
+)
 
 // Crypto is the crypto interface for the root chain.
 type Crypto interface {
@@ -24,7 +28,9 @@ type Crypto interface {
 
 type defaultCrypto struct{}
 
-func newDefaultCrypto() (crypto defaultCrypto) {
+func newDefaultCrypto() defaultCrypto {
+	crypto := defaultCrypto{}
+
 	return crypto
 }
 
@@ -34,36 +40,38 @@ func (defaultCrypto) AdvanceChain(
 ) (keys.Root, keys.Master, keys.Header, error) {
 	var newHashErr error
 
-	getHasher := func() hash.Hash {
-		var hasher hash.Hash
+	kdf := hkdf.New(
+		func() hash.Hash {
+			hasher, err := blake2b.New512(nil)
+			newHashErr = err
 
-		hasher, newHashErr = blake2b.New512(nil)
+			return hasher
+		},
+		sharedKey.Bytes,
+		rootKey.Bytes,
+		defaultCryptoKDFInfo,
+	)
+	kdfOutput := make([]byte, defaultCryptoKDFOutputLen)
 
-		return hasher
-	}
-
-	kdf := hkdf.New(getHasher, sharedKey.Bytes, rootKey.Bytes, defaultCryptoKDFInfo)
-	output := make([]byte, defaultCryptoKDFOutputLen)
-
-	_, err := io.ReadFull(kdf, output)
+	_, err := io.ReadFull(kdf, kdfOutput)
 	if err != nil {
-		return keys.Root{}, keys.Master{}, keys.Header{}, fmt.Errorf("KDF: %w", err)
+		return keys.Root{}, keys.Master{}, keys.Header{}, errors.Join(ErrKDF, err)
 	}
 
 	if newHashErr != nil {
-		return keys.Root{}, keys.Master{}, keys.Header{}, fmt.Errorf("new hash: %w", newHashErr)
+		return keys.Root{}, keys.Master{}, keys.Header{}, errors.Join(ErrNewHasher, err)
 	}
 
 	newRootKey := keys.Root{
-		Bytes: output[:32],
+		Bytes: kdfOutput[:32],
 	}
 
 	masterKey := keys.Master{
-		Bytes: output[32:64],
+		Bytes: kdfOutput[32:64],
 	}
 
 	nextHeaderKey := keys.Header{
-		Bytes: output[64:],
+		Bytes: kdfOutput[64:],
 	}
 
 	return newRootKey, masterKey, nextHeaderKey, nil

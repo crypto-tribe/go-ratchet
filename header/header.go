@@ -2,23 +2,23 @@ package header
 
 import (
 	"encoding/binary"
-	"fmt"
 
-	"github.com/lyreware/go-ratchet/errlist"
 	"github.com/lyreware/go-ratchet/keys"
 	"github.com/lyreware/go-utils/sizes"
 	"github.com/lyreware/go-utils/slices"
 )
 
+// Header is the message header.
 type Header struct {
 	PublicKey                         keys.Public
 	PreviousSendingChainMessagesCount uint64
 	MessageNumber                     uint64
 }
 
+// Decode decodes header bytes to the struct.
 func Decode(headerBytes []byte) (Header, error) {
 	if len(headerBytes) < 2*sizes.Uint64 {
-		return Header{}, fmt.Errorf("%w: not enough bytes", errlist.ErrInvalidValue)
+		return Header{}, ErrNotEnoughBytes
 	}
 
 	header := Header{
@@ -39,6 +39,7 @@ func Decode(headerBytes []byte) (Header, error) {
 	return header, nil
 }
 
+// Encode encodes header struct to the bytes slice.
 func (h Header) Encode() []byte {
 	var messageNumberBytes [sizes.Uint64]byte
 	binary.LittleEndian.PutUint64(

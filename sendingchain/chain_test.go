@@ -24,11 +24,10 @@ var newChainTests = []struct {
 	name          string
 	args          newChainTestArgs
 	errCategories []error
-	errString     string
 }{
 	{"zero args and no options", newChainTestArgs{}, nil, ""},
 	{
-		"full args and crypto option",
+		"non-empty args and crypto option",
 		newChainTestArgs{
 			&keys.Master{
 				Bytes: []byte{1, 2, 3},
@@ -46,7 +45,6 @@ var newChainTests = []struct {
 			},
 		},
 		nil,
-		"",
 	},
 	{
 		"zero args and crypto option error",
@@ -56,10 +54,10 @@ var newChainTests = []struct {
 			},
 		},
 		[]error{
-			errlist.ErrInvalidValue,
-			errlist.ErrOption,
+			ErrNewConfig,
+			ErrApplyOptions,
+			ErrCryptoIsNil,
 		},
-		"new config: option: invalid value: crypto is nil",
 	},
 }
 
@@ -67,6 +65,8 @@ func TestNewChain(t *testing.T) {
 	t.Parallel()
 
 	for _, test := range newChainTests {
+		test := test
+
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -78,9 +78,8 @@ func TestNewChain(t *testing.T) {
 				test.args.previousChainMessagesCount,
 				test.args.options...,
 			)
-			if (err == nil && test.errString != "") ||
-				(err != nil && err.Error() != test.errString) {
-				t.Fatalf("New(%+v): expected error %q but got %+v", test.args, test.errString, err)
+			if err != nil && len(test.errCategories) == 0 {
+				t.Fatalf("New(%+v): expected no error but got %v", test.args, err)
 			}
 
 			for _, errCategory := range test.errCategories {
@@ -92,6 +91,10 @@ func TestNewChain(t *testing.T) {
 						err,
 					)
 				}
+			}
+
+			if err != nil {
+				return
 			}
 
 			if !reflect.DeepEqual(chain.masterKey, test.args.masterKey) {
@@ -175,6 +178,8 @@ func TestChainClone(t *testing.T) {
 	t.Parallel()
 
 	for _, test := range chainCloneTests {
+		test := test
+
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -248,113 +253,117 @@ func TestChainClone(t *testing.T) {
 	}
 }
 
-func TestChainEncryptWithNilHeaderKey(t *testing.T) {
-	t.Parallel()
-
-	chain, err := New(nil, nil, keys.Header{Bytes: []byte{4, 5, 6}}, 0, 2)
-	if err != nil {
-		t.Fatalf("New(): expected no error but got %v", err)
-	}
-
-	_, _, err = chain.Encrypt(header.Header{}, []byte{1, 2, 3}, []byte{4, 5, 6})
-	if !errors.Is(err, errlist.ErrInvalidValue) ||
-		err.Error() != "invalid value: header key is nil" {
-		t.Fatalf("%+v.Encrypt() expected header key nil error but got %+v", chain, err)
-	}
-}
-
-func TestChainEncryptWithShortHeaderKey(t *testing.T) {
-	t.Parallel()
-
-	chain, err := New(
-		nil,
-		&keys.Header{
-			Bytes: []byte{1, 2, 3},
-		},
-		keys.Header{
-			Bytes: []byte{4, 5, 6},
-		},
-		0,
-		2,
-	)
-	if err != nil {
-		t.Fatalf("New(): expected no error but got %v", err)
-	}
-
-	_, _, err = chain.Encrypt(header.Header{}, []byte{1, 2, 3}, []byte{4, 5, 6})
-	if !errors.Is(err, errlist.ErrCrypto) ||
-		err.Error() != "crypto: encrypt header: new cipher: chacha20poly1305: bad key length" {
-		t.Fatalf("%+v.Encrypt() expected invalid header key error but got %+v", chain, err)
-	}
-}
-
-func TestChainEncryptWithNilMasterKey(t *testing.T) {
-	t.Parallel()
-
-	chain, err := New(
-		nil,
-		&keys.Header{
-			Bytes: make([]byte, cipher.KeySize),
-		},
-		keys.Header{
-			Bytes: []byte{4, 5, 6},
-		},
-		0,
-		2,
-	)
-	if err != nil {
-		t.Fatalf("New(): expected no error but got %v", err)
-	}
-
-	_, _, err = chain.Encrypt(header.Header{}, []byte{1, 2, 3}, []byte{4, 5, 6})
-	if !errors.Is(err, errlist.ErrInvalidValue) ||
-		err.Error() != "advance chain: invalid value: master key is nil" {
-		t.Fatalf("%+v.Encrypt() expected master key nil error but got %+v", chain, err)
-	}
-}
-
-var chainEncryptSuccessTests = []struct {
-	name            string
+type chainEncryptTestArgs struct {
+	masterKey       *keys.Master
+	headerKey       *keys.Header
+	nextHeaderKey   keys.Header
 	headerPublicKey keys.Public
 	data            []byte
 	auth            []byte
+}
+
+var chainEncryptTests = []struct {
+	name          string
+	args          chainEncryptTestArgs
+	errCategories []error
 }{
-	{"zero args", keys.Public{}, nil, nil},
 	{
-		"non-empty args",
-		keys.Public{
-			Bytes: []byte{0, 1, 2, 3, 4, 5},
+		"nil master key",
+		chainEncryptTestArgs{
+			nil,
+			&keys.Header{
+				Bytes: make([]byte, cipher.KeySize),
+			},
+			keys.Header{},
+			keys.Public{},
+			[]byte{6, 7, 8, 9},
+			[]byte{3, 2, 1},
 		},
-		[]byte{6, 7, 8, 9},
-		[]byte{3, 2, 1},
+		"advance chain: invalid value: master key is nil",
+		[]error{
+			ErrAdvance,
+			ErrMasterKeyIsNil,
+		},
+	},
+	{
+		"nil header key",
+		chainEncryptTestArgs{
+			&keys.Master{
+				Bytes: []byte{1, 2, 3},,
+			},
+			nil,
+			keys.Header{},
+			keys.Public{},
+			[]byte{6, 7, 8, 9},
+			[]byte{3, 2, 1},
+		},
+		[]error{
+			ErrHeaderKeyIsNil,
+		}
+	},
+	{
+		"short header key",
+		chainEncryptTestArgs{
+			&keys.Master{
+				Bytes: []byte{1, 2, 3},
+			},
+			&keys.Header{
+				Bytes: []byte{1, 2, 3},
+			},
+			keys.Header{},
+			keys.Public{},
+			[]byte{6, 7, 8, 9},
+			[]byte{3, 2, 1},
+		},
+		[]errors{
+			ErrEncryptHeader,
+			ErrNewCipher,
+		},
+	},
+	{
+		"success",
+		chainEncryptTestArgs{
+			&keys.Master{
+				Bytes: []byte{1, 2, 3},
+			},
+			&keys.Header{
+				Bytes: make([]byte, cipher.KeySize),
+			},
+			keys.Header{
+				Bytes: make([]byte, cipher.KeySize),
+			},
+			keys.Public{
+				Bytes: []byte{0, 1, 2, 3, 4, 5},
+			},
+			[]byte{6, 7, 8, 9},
+			[]byte{3, 2, 1},
+		},
+		nil,
 	},
 }
 
-func TestChainEncryptSuccess(t *testing.T) {
+func TestChainEncrypt(t *testing.T) {
 	t.Parallel()
 
-	chain, err := New(
-		&keys.Master{
-			Bytes: []byte{1, 2, 3},
-		},
-		&keys.Header{
-			Bytes: make([]byte, cipher.KeySize),
-		},
-		keys.Header{
-			Bytes: []byte{4, 5, 6},
-		},
-		0,
-		2,
-	)
-	if err != nil {
-		t.Fatalf("New(): expected no error but got %v", err)
-	}
+	for testIndex, test := range chainEncryptTests {
+		testIndex := testIndex
+		test := test
 
-	for testIndex, test := range chainEncryptSuccessTests {
+		chain, err := New(
+			test.args.masterKey,
+			test.args.headerKey,
+			test.args.nextHeaderKey,
+			uint64(testIndex),
+			2,
+		)
+		if err != nil {
+			t.Fatalf("New(): expected no error but got %v", err)
+		}
+
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			header := chain.PrepareHeader(test.headerPublicKey)
+			header := chain.PrepareHeader(test.args.headerPublicKey)
 			if header.MessageNumber != uint64(testIndex) {
 				t.Fatalf(
 					"expected header message number %d but got %d",
@@ -364,15 +373,33 @@ func TestChainEncryptSuccess(t *testing.T) {
 			}
 
 			encryptedHeader, encryptedData, err := chain.Encrypt(header, test.data, test.auth)
-			if err != nil {
+			if err != nil && len(test.errCategories) == 0 {
 				t.Fatalf(
-					"%+v.Encrypt(%+v, %v, %v) expected no error but got %+v",
+					"%+v.Encrypt(%+v, %v, %v) expected no error but got %v",
 					chain,
 					header,
 					test.data,
 					test.auth,
 					err,
 				)
+			}
+
+			for _, errCategory := range test.errCategories {
+				if !errors.Is(err, test.errCategory) {
+					t.Fatalf(
+						"%+v.Encrypt(%+v, %v, %v) expected error category %v but got %v",
+						chain,
+						header,
+						test.data,
+						test.auth,
+						test.errCategory,
+						err,
+					)
+				}
+			}
+
+			if err != nil {
+				return
 			}
 
 			if len(encryptedHeader) == 0 {
@@ -453,6 +480,8 @@ func TestChainPrepareHeader(t *testing.T) {
 	t.Parallel()
 
 	for _, test := range chainPrepareHeaderTests {
+		test := test
+
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 

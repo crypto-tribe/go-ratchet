@@ -3,7 +3,7 @@ package sendingchain
 import (
 	"crypto/hmac"
 	"crypto/rand"
-	"fmt"
+	"errors"
 	"hash"
 
 	"github.com/lyreware/go-ratchet/chainscommon"
@@ -32,25 +32,21 @@ func newDefaultCrypto() defaultCrypto {
 func (defaultCrypto) AdvanceChain(masterKey keys.Master) (keys.Master, keys.Message, error) {
 	var newHashErr error
 
-	getHasher := func() hash.Hash {
-		var hasher hash.Hash
+	mac := hmac.New(
+		func() hash.Hash {
+			hasher, err := blake2b.New512(nil)
+			newHashErr = err
 
-		hasher, newHashErr = blake2b.New512(nil)
-
-		return hasher
-	}
-
-	mac := hmac.New(getHasher, masterKey.Bytes)
+			return hasher
+		},
+		masterKey.Bytes,
+	)
 
 	const masterKeyByte = 0x02
 
 	_, err := mac.Write([]byte{masterKeyByte})
 	if err != nil {
-		return keys.Master{}, keys.Message{}, fmt.Errorf(
-			"write %d byte to MAC: %w",
-			masterKeyByte,
-			err,
-		)
+		return keys.Master{}, keys.Message{}, errors.Join(ErrWriteMasterKeyByteToMAC, err)
 	}
 
 	newMasterKey := keys.Master{
@@ -62,11 +58,7 @@ func (defaultCrypto) AdvanceChain(masterKey keys.Master) (keys.Master, keys.Mess
 
 	_, err = mac.Write([]byte{messageKeyByte})
 	if err != nil {
-		return keys.Master{}, keys.Message{}, fmt.Errorf(
-			"write %d byte to MAC: %w",
-			messageKeyByte,
-			err,
-		)
+		return keys.Master{}, keys.Message{}, errors.Join(ErrWriteMessageKeyByteToMAC, err)
 	}
 
 	messageKey := keys.Message{
@@ -74,7 +66,7 @@ func (defaultCrypto) AdvanceChain(masterKey keys.Master) (keys.Master, keys.Mess
 	}
 
 	if newHashErr != nil {
-		return keys.Master{}, keys.Message{}, fmt.Errorf("new hash: %w", newHashErr)
+		return keys.Master{}, keys.Message{}, errors.Join(ErrNewHasher, newHashErr)
 	}
 
 	return newMasterKey, messageKey, nil
@@ -85,12 +77,12 @@ func (c defaultCrypto) EncryptHeader(key keys.Header, head header.Header) ([]byt
 
 	_, err := rand.Read(nonce[:])
 	if err != nil {
-		return nil, fmt.Errorf("generate random nonce: %w", err)
+		return nil, errors.Join(ErrGenerateNonce, err)
 	}
 
 	encryptedHeader, err := c.encrypt(key.Bytes, nonce[:], head.Encode(), nil)
 	if err != nil {
-		return nil, fmt.Errorf("encrypt: %w", err)
+		return nil, err
 	}
 
 	encryptedHeader = slices.ConcatBytes(nonce[:], encryptedHeader)
@@ -101,12 +93,12 @@ func (c defaultCrypto) EncryptHeader(key keys.Header, head header.Header) ([]byt
 func (c defaultCrypto) EncryptMessage(key keys.Message, message, auth []byte) ([]byte, error) {
 	cipherKey, nonce, err := chainscommon.DeriveMessageCipherKeyAndNonce(key)
 	if err != nil {
-		return nil, fmt.Errorf("derive key and nonce: %w", err)
+		return nil, errors.Join(ErrDeriveMessageCipherKeyAndNonce, err)
 	}
 
 	encryptedMessage, err := c.encrypt(cipherKey, nonce, message, auth)
 	if err != nil {
-		return nil, fmt.Errorf("encrypt: %w", err)
+		return nil, err
 	}
 
 	return encryptedMessage, nil
@@ -115,7 +107,7 @@ func (c defaultCrypto) EncryptMessage(key keys.Message, message, auth []byte) ([
 func (defaultCrypto) encrypt(key, nonce, data, auth []byte) ([]byte, error) {
 	cipherX, err := cipher.NewX(key)
 	if err != nil {
-		return nil, fmt.Errorf("new cipher: %w", err)
+		return nil, errors.Join(ErrNewCipher, err)
 	}
 
 	encryptedData := cipherX.Seal(nil, nonce, data, auth)

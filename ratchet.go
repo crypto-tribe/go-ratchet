@@ -25,6 +25,8 @@ type Ratchet struct {
 	cfg                     config
 }
 
+// NewRecipient created a new ratchet recipient.
+//
 // TODO: try to reduce arguments count.
 func NewRecipient(
 	localPrivateKey keys.Private,
@@ -77,6 +79,8 @@ func NewRecipient(
 	return ratchet, nil
 }
 
+// NewSender creates a new ratchet sender.
+//
 // TODO: try to reduce arguments count.
 func NewSender(
 	remotePublicKey keys.Public,
@@ -142,6 +146,7 @@ func NewSender(
 	return ratchet, nil
 }
 
+// Clone clones ratchet.
 func (r Ratchet) Clone() Ratchet {
 	r.localPrivateKey = r.localPrivateKey.Clone()
 	r.localPublicKey = r.localPublicKey.Clone()
@@ -153,6 +158,7 @@ func (r Ratchet) Clone() Ratchet {
 	return r
 }
 
+// Decrypt decrypts passed encrypted header and encrypted data and authenticates them with auth.
 func (r *Ratchet) Decrypt(
 	encryptedHeader []byte,
 	encryptedData []byte,
@@ -183,6 +189,7 @@ func (r *Ratchet) Decrypt(
 	return decryptedData, nil
 }
 
+// Encrypt encrypts passed data and authenticates it with auth.
 func (r *Ratchet) Encrypt(
 	data []byte,
 	auth []byte,

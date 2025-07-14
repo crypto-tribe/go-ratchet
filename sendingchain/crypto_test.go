@@ -28,6 +28,8 @@ func TestDefaultCryptoAdvanceChain(t *testing.T) {
 	crypto := newDefaultCrypto()
 
 	for _, test := range defaultCryptoAdvanceChainTests {
+		test := test
+
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -52,16 +54,18 @@ func TestDefaultCryptoAdvanceChain(t *testing.T) {
 }
 
 var defaultCryptoEncryptHeaderTests = []struct {
-	name      string
-	headerKey keys.Header
-	header    header.Header
-	errString string
+	name          string
+	headerKey     keys.Header
+	header        header.Header
+	errCategories []error
 }{
 	{
 		"zero header key and zero header",
 		keys.Header{},
 		header.Header{},
-		"new cipher: chacha20poly1305: bad key length",
+		[]error{
+			ErrNewCipher,
+		},
 	},
 	{
 		"invalid header key and zero header",
@@ -69,18 +73,20 @@ var defaultCryptoEncryptHeaderTests = []struct {
 			Bytes: make([]byte, cipher.KeySize+1),
 		},
 		header.Header{},
-		"new cipher: chacha20poly1305: bad key length",
+		[]error{
+			ErrNewCipher,
+		},
 	},
 	{
-		"full header key and zero header",
+		"non-empty header key and zero header",
 		keys.Header{
 			Bytes: make([]byte, cipher.KeySize),
 		},
 		header.Header{},
-		"",
+		nil,
 	},
 	{
-		"full header key and full header",
+		"non-empty header key and full header",
 		keys.Header{
 			Bytes: make([]byte, cipher.KeySize),
 		},
@@ -91,7 +97,7 @@ var defaultCryptoEncryptHeaderTests = []struct {
 			MessageNumber:                     222,
 			PreviousSendingChainMessagesCount: 55,
 		},
-		"",
+		nil,
 	},
 }
 
@@ -101,19 +107,25 @@ func TestDefaultCryptoEncryptHeader(t *testing.T) {
 	crypto := newDefaultCrypto()
 
 	for _, test := range defaultCryptoEncryptHeaderTests {
+		test := test
+
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
 			encryptedHeader, err := crypto.EncryptHeader(test.headerKey, test.header)
-			if (err == nil && test.errString != "") ||
-				(err != nil && err.Error() != test.errString) {
+			if err != nil && len(test.errCategories) == 0 {
 				t.Fatalf(
-					"EncryptHeader(%+v, %+v): expected err %q but got %+v",
+					"EncryptHeader(%+v, %+v): expected no error but got %v",
 					test.headerKey,
 					test.header,
-					test.errString,
 					err,
 				)
+			}
+
+			for _, errCategory := range test.errCategories {
+				if !errors.Is(err, errCategory) {
+					t.Fatalf("EncryptHeader(%+v, %+v): expected error %v but got %v", test.headerKey, test.header, errCategory, err)
+				}
 			}
 
 			if err != nil {
@@ -145,7 +157,7 @@ var defaultCryptoEncryptMessageTests = []struct {
 		nil,
 	},
 	{
-		"full message key, without auth",
+		"non-empty message key, without auth",
 		keys.Message{
 			Bytes: []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16},
 		},
@@ -159,7 +171,7 @@ var defaultCryptoEncryptMessageTests = []struct {
 		[]byte{1, 2, 3},
 	},
 	{
-		"full message key, with auth",
+		"non-empty message key, with auth",
 		keys.Message{
 			Bytes: []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16},
 		},
@@ -174,6 +186,8 @@ func TestDefaultCryptoEncryptMessage(t *testing.T) {
 	crypto := newDefaultCrypto()
 
 	for _, test := range defaultCryptoEncryptMessageTests {
+		test := test
+
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 

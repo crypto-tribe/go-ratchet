@@ -8,6 +8,7 @@ import (
 	"github.com/lyreware/go-ratchet/keys"
 )
 
+// Crypto is the interface for rachet crypto.
 type Crypto interface {
 	ComputeSharedKey(privateKey keys.Private, publicKey keys.Public) (keys.Shared, error)
 	GenerateKeyPair() (keys.Private, keys.Public, error)
@@ -54,7 +55,7 @@ func (c defaultCrypto) ComputeSharedKey(
 func (c defaultCrypto) GenerateKeyPair() (keys.Private, keys.Public, error) {
 	foreignPrivateKey, err := c.curve.GenerateKey(rand.Reader)
 	if err != nil {
-		return keys.Private{}, keys.Public{}, nil
+		return keys.Private{}, keys.Public{}, fmt.Errorf("generate private key: %w", err)
 	}
 
 	privateKey := keys.Private{

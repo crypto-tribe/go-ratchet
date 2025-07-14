@@ -43,8 +43,10 @@ func (cfg config) clone() config {
 	return cfg
 }
 
+// Option is the way to modify config default values.
 type Option func(cfg *config) error
 
+// WithCrypto sets passed crypto to the config.
 func WithCrypto(crypto Crypto) Option {
 	return func(cfg *config) error {
 		if check.IsNil(crypto) {
@@ -57,6 +59,7 @@ func WithCrypto(crypto Crypto) Option {
 	}
 }
 
+// WithSkippedKeysStorage sets passed storage to the config.
 func WithSkippedKeysStorage(storage SkippedKeysStorage) Option {
 	return func(cfg *config) (err error) {
 		if check.IsNil(storage) {

@@ -12,6 +12,7 @@ import (
 	cipher "golang.org/x/crypto/chacha20poly1305"
 )
 
+// Crypto is a crypto for the receiving chain.
 type Crypto interface {
 	AdvanceChain(masterKey keys.Master) (keys.Master, keys.Message, error)
 	DecryptHeader(key keys.Header, encryptedHeader []byte) (header.Header, error)

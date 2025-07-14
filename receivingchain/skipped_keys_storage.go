@@ -16,7 +16,10 @@ type (
 	SkippedKeysIter func(yield SkippedKeysYield)
 
 	// SkippedKeysYield represents loop iteration.
-	SkippedKeysYield func(headerKey keys.Header, messageNumberKeysIter SkippedMessageNumberKeysIter) bool
+	SkippedKeysYield func(
+		headerKey keys.Header,
+		messageNumberKeysIter SkippedMessageNumberKeysIter,
+	) bool
 
 	// SkippedMessageNumberKeysIter passes message number and message key to yield loop iteration.
 	SkippedMessageNumberKeysIter func(yield SkippedMessageNumberKeysYield)
@@ -118,14 +121,16 @@ func (st defaultSkippedKeysStorage) GetIter() (SkippedKeysIter, error) {
 	return iter, nil
 }
 
-func (defaultSkippedKeysStorage) convertToKey(headerKey keys.Header) (key string) {
-	key = string(headerKey.Bytes)
+func (defaultSkippedKeysStorage) convertToKey(headerKey keys.Header) string {
+	key := string(headerKey.Bytes)
 
 	return key
 }
 
-func (defaultSkippedKeysStorage) convertFromKey(key string) (headerKey keys.Header) {
-	headerKey.Bytes = []byte(key)
+func (defaultSkippedKeysStorage) convertFromKey(key string) keys.Header {
+	headerKey := keys.Header{
+		Bytes: []byte(key),
+	}
 
 	return headerKey
 }

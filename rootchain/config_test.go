@@ -5,59 +5,78 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/lyreware/go-ratchet/errlist"
 	"github.com/lyreware/go-ratchet/keys"
-	"github.com/lyreware/go-utils/check"
 )
 
 type testCrypto struct{}
 
-func (tc testCrypto) AdvanceChain(
+func (testCrypto) AdvanceChain(
 	_ keys.Root,
 	_ keys.Shared,
 ) (keys.Root, keys.Master, keys.Header, error) {
 	return keys.Root{}, keys.Master{}, keys.Header{}, nil
 }
 
-func TestNewDefaultConfig(t *testing.T) {
-	t.Parallel()
-
-	cfg, err := newConfig()
-	if err != nil {
-		t.Fatalf("newConfig() expected no error but got %v", err)
-	}
-
-	if check.IsNil(cfg.crypto) {
-		t.Fatal("newConfig() sets no default value for crypto")
-	}
+var newConfigTests = []struct{
+	name           string
+	options        []Option
+	errCategories  []error
+	expectedCrypto Crypto
+}{
+	{
+		"default",
+		nil,
+		nil,
+		defaultCrypto{},
+	},
+	{
+		"crypto option success",
+		[]Option{
+			WithCrypto(testCrypto{}),
+		},
+		nil,
+		testCrypto{},
+	},
+	{
+		"nil crypto",
+		[]Option{
+			WithCrypto(nil),
+		},
+		[]error{
+			ErrApplyOptions,
+			ErrCryptoIsNil,
+		},
+		nil,
+	},
 }
 
-func TestNewConfigWithCryptoOption(t *testing.T) {
+func TestNewConfig(t *testing.T) {
 	t.Parallel()
 
-	cfg, err := newConfig(WithCrypto(testCrypto{}))
-	if err != nil {
-		t.Fatalf("newConfig() with options expected no error but got %v", err)
+	for _, test := range newConfigTests {
+		test := test
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			cfg, err := newConfig(test.options...)
+			if err != nil && len(test.errCategories) == 0 {
+				t.Fatalf("newConfig() expected no error but got %v", err)
+			}
+			for _, errCategory := range test.errCategories {
+				if !errors.Is(err, errCategory) {
+					t.Fatalf("newConfig() expected error %v but got %v", errCategory, err)
+				}
+			}
+
+			if err != nil {
+				return
+			}
+
+			if reflect.TypeOf(cfg.crypto) != reflect.TypeOf(test.expectedCrypto) {
+				t.Fatal("WithCrypto() option did not set passed crypto")
+			}
+		})
 	}
 
-	if reflect.TypeOf(cfg.crypto) != reflect.TypeOf(testCrypto{}) {
-		t.Fatal("WithCrypto() option did not set passed crypto")
-	}
-}
-
-func TestNewConfigWithCryptoOptionError(t *testing.T) {
-	t.Parallel()
-
-	_, err := newConfig(WithCrypto(nil))
-	if err == nil || err.Error() != "option: invalid value: crypto is nil" {
-		t.Fatalf("WithCrypto(nil) expected error but got %v", err)
-	}
-
-	if !errors.Is(err, errlist.ErrOption) {
-		t.Fatalf("WithCrypto(nil) error is not option error but %v", err)
-	}
-
-	if !errors.Is(err, errlist.ErrInvalidValue) {
-		t.Fatalf("WithCrypto(nil) error is not invalid value error but %v", err)
-	}
 }

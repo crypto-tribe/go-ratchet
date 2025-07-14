@@ -29,7 +29,7 @@ type testSkippedKeysStorage struct {
 	cloneCalled bool
 }
 
-func (ts *testSkippedKeysStorage) Add(_ keys.Header, _ uint64, _ keys.Message) error {
+func (*testSkippedKeysStorage) Add(_ keys.Header, _ uint64, _ keys.Message) error {
 	return nil
 }
 
@@ -39,11 +39,11 @@ func (ts *testSkippedKeysStorage) Clone() SkippedKeysStorage {
 	return ts
 }
 
-func (ts *testSkippedKeysStorage) Delete(_ keys.Header, _ uint64) error {
+func (*testSkippedKeysStorage) Delete(_ keys.Header, _ uint64) error {
 	return nil
 }
 
-func (ts *testSkippedKeysStorage) GetIter() (SkippedKeysIter, error) {
+func (*testSkippedKeysStorage) GetIter() (SkippedKeysIter, error) {
 	return func(_ SkippedKeysYield) {}, nil
 }
 

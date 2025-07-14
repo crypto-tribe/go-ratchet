@@ -41,8 +41,10 @@ func (cfg *config) applyOptions(options ...Option) error {
 	return nil
 }
 
+// Option is a way to modify config default values.
 type Option func(cfg *config) error
 
+// WithCrypto sets passed crypto to the config.
 func WithCrypto(crypto Crypto) Option {
 	return func(cfg *config) error {
 		if check.IsNil(crypto) {
@@ -55,6 +57,7 @@ func WithCrypto(crypto Crypto) Option {
 	}
 }
 
+// WithReceivingChainOptions sets passed options to the receiving chain.
 func WithReceivingChainOptions(options ...receivingchain.Option) Option {
 	return func(cfg *config) error {
 		cfg.receivingOptions = options
@@ -63,6 +66,7 @@ func WithReceivingChainOptions(options ...receivingchain.Option) Option {
 	}
 }
 
+// WithRootChainOptions sets passed options to the root chain.
 func WithRootChainOptions(options ...rootchain.Option) Option {
 	return func(cfg *config) error {
 		cfg.rootOptions = options
@@ -71,6 +75,7 @@ func WithRootChainOptions(options ...rootchain.Option) Option {
 	}
 }
 
+// WithSendingChainOptions sets passed options to the sending chain.
 func WithSendingChainOptions(options ...sendingchain.Option) Option {
 	return func(cfg *config) error {
 		cfg.sendingOptions = options

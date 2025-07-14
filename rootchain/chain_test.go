@@ -14,11 +14,10 @@ var newChainTests = []struct {
 	rootKey       keys.Root
 	options       []Option
 	errCategories []error
-	errString     string
 }{
-	{"zero root key and no options", keys.Root{}, nil, nil, ""},
+	{"zero root key and no options", keys.Root{}, nil, nil},
 	{
-		"full root key and crypto option",
+		"non-empty root key and crypto option",
 		keys.Root{
 			Bytes: []byte{1, 2, 3},
 		},
@@ -26,19 +25,18 @@ var newChainTests = []struct {
 			WithCrypto(testCrypto{}),
 		},
 		nil,
-		"",
 	},
 	{
-		"zero key and crypto option error",
+		"zero key and nil crypto",
 		keys.Root{},
 		[]Option{
 			WithCrypto(nil),
 		},
 		[]error{
-			errlist.ErrInvalidValue,
-			errlist.ErrOption,
+			ErrNewConfig,
+			ErrApplyOptions,
+			ErrCryptoIsNil,
 		},
-		"new config: option: invalid value: crypto is nil",
 	},
 }
 
@@ -46,17 +44,17 @@ func TestNewChain(t *testing.T) {
 	t.Parallel()
 
 	for _, test := range newChainTests {
+		test := test
+
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
 			_, err := New(test.rootKey, test.options...)
-			if (err == nil && test.errString != "") ||
-				(err != nil && err.Error() != test.errString) {
+			if err != nil && len(test.errCategories) == 0 {
 				t.Fatalf(
-					"New(%+v, %+v): expected error %q but got %+v",
+					"New(%+v, %+v): expected no error but got %v",
 					test.rootKey,
 					test.options,
-					test.errString,
 					err,
 				)
 			}
@@ -102,6 +100,8 @@ func TestChainAdvance(t *testing.T) {
 	}
 
 	for _, test := range chainAdvanceTests {
+		test := test
+
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -153,6 +153,8 @@ func TestChainClone(t *testing.T) {
 	t.Parallel()
 
 	for _, test := range chainCloneTests {
+		test := test
+
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 

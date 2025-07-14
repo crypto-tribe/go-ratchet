@@ -1,7 +1,7 @@
 package chainscommon
 
 import (
-	"fmt"
+	"errors"
 	"hash"
 	"io"
 
@@ -11,39 +11,39 @@ import (
 	"golang.org/x/crypto/hkdf"
 )
 
-const cryptoMessageCipherKDFOutputLen = cipher.KeySize + cipher.NonceSizeX
-
-var (
-	cryptoMessageCipherKDFSalt = make([]byte, cryptoMessageCipherKDFOutputLen)
-	cryptoMessageCipherKDFInfo = []byte("message cipher")
+const (
+	messageCipherKDFOutputLen = cipher.KeySize + cipher.NonceSizeX
 )
 
+var (
+	messageCipherKDFSalt = make([]byte, messageCipherKDFOutputLen)
+	messageCipherKDFInfo = []byte("message cipher")
+)
+
+// DeriveMessageCipherKeyAndNonce derives a new cipher key and cipher nonce to encrypt a message.
 func DeriveMessageCipherKeyAndNonce(messageKey keys.Message) (key []byte, nonce []byte, err error) {
-	var newHashErr error
-
-	getHasher := func() hash.Hash {
-		var hasher hash.Hash
-
-		hasher, newHashErr = blake2b.New512(nil)
-
-		return hasher
-	}
+	var newHasherErr error
 
 	kdf := hkdf.New(
-		getHasher,
+		func() hash.Hash {
+			hasher, err := blake2b.New512(nil)
+			newHasherErr = err
+
+			return hasher
+		},
 		messageKey.Bytes,
-		cryptoMessageCipherKDFSalt,
-		cryptoMessageCipherKDFInfo,
+		messageCipherKDFSalt,
+		messageCipherKDFInfo,
 	)
-	kdfOutput := make([]byte, cryptoMessageCipherKDFOutputLen)
+	kdfOutput := make([]byte, messageCipherKDFOutputLen)
 
 	_, err = io.ReadFull(kdf, kdfOutput)
 	if err != nil {
-		return nil, nil, fmt.Errorf("KDF: %w", err)
+		return nil, nil, errors.Join(ErrKDF, err)
 	}
 
-	if newHashErr != nil {
-		return nil, nil, fmt.Errorf("new hash: %w", newHashErr)
+	if newHasherErr != nil {
+		return nil, nil, errors.Join(ErrNewHasher, newHasherErr)
 	}
 
 	key = kdfOutput[:cipher.KeySize]

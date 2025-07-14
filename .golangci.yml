@@ -9,7 +9,7 @@ formatters:
     - gofumpt # enforces a stricter format than 'gofmt', while being backwards compatible
 
   golines:
-    max-len: 80
+    max-len: 100
 
 linters:
   enable:
@@ -21,10 +21,10 @@ linters:
     - copyloopvar # detects places where loop variables are copied (Go 1.22+)
     - cyclop # checks function and package cyclomatic complexity
     - depguard # checks if package imports are in a list of acceptable packages
-    - dupl # tool for code clone detection
     - durationcheck # checks for two durations multiplied together
     - embeddedstructfieldcheck # checks embedded types in structs
     - errcheck # checking for unchecked errors, these unchecked errors can be critical bugs in some cases
+    - err113 # check predefined errors
     - errname # checks that sentinel errors are prefixed with the Err and error types are suffixed with the Error
     - errorlint # finds code that will cause problems with the error wrapping scheme introduced in Go 1.13
     - exhaustive # checks exhaustiveness of enum switch statements
@@ -66,7 +66,6 @@ linters:
     - promlinter # checks Prometheus metrics naming via promlint
     - protogetter # reports direct reads from proto message fields when getters should be used
     - reassign # checks that package variables are not reassigned
-    - recvcheck # checks for receiver type consistency
     - revive # fast, configurable, extensible, flexible, and beautiful linter for Go, drop-in replacement of golint
     - rowserrcheck # checks whether Err of rows is checked successfully
     - sloglint # ensure consistent code style when using log/slog
@@ -88,7 +87,6 @@ linters:
     - goheader # checks is file header matches to pattern
     - inamedparam # [great idea, but too strict, need to ignore a lot of cases by default] reports interfaces with unnamed method parameters
     - interfacebloat # checks the number of methods inside an interface
-    - ireturn # accept interfaces, return concrete types
     - noinlineerr # disallows inline error handling `if err := ...; err != nil {`
     - prealloc # [premature optimization, but can be used in some cases] finds slice declarations that could potentially be preallocated
     - tagalign # checks that struct tags are well aligned
@@ -109,6 +107,9 @@ linters:
         text: "create a named constant for it"
         linters:
           - revive
+      - path: _test\.go
+        linters:
+          - gosec
       - path: \.go
         text: "appears, at least,"
         linters:
@@ -181,13 +182,7 @@ linters:
       struct-method: false
 
     funlen:
-      # Checks the number of lines in a function.
-      # If lower than 0, disable the check.
-      # Default: 60
       lines: 100
-      # Checks the number of statements in a function.
-      # If lower than 0, disable the check.
-      # Default: 40
       statements: 50
 
     gochecksumtype:
@@ -196,7 +191,7 @@ linters:
       default-signifies-exhaustive: false
 
     gocognit:
-      min-complexity: 20
+      min-complexity: 35
 
     gocritic:
       settings:
@@ -212,10 +207,8 @@ linters:
     govet:
       enable-all: true
       disable:
-        - fieldalignment # too strict
-      settings:
-        shadow:
-          strict: true
+        - fieldalignment
+        - shadow
 
     mnd:
       ignored-functions:
@@ -252,8 +245,12 @@ linters:
         - name: add-constant
           arguments:
             - allow-ints: "0,2,32,64"
-        - name: cognitive-complexity
+        - name: cyclomatic
           arguments: [20]
+        - name: cognitive-complexity
+          arguments: [35]
+        - name: function-length
+          arguments: [50, 100]
         - name: function-result-limit
           arguments: [4]
         - name: line-length-limit

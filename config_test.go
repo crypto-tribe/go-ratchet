@@ -40,7 +40,7 @@ func (testReceivingChainCrypto) DecryptMessage(_ keys.Message, _, _ []byte) ([]b
 
 type testRootChainCrypto struct{}
 
-func (tc testRootChainCrypto) AdvanceChain(
+func (testRootChainCrypto) AdvanceChain(
 	_ keys.Root,
 	_ keys.Shared,
 ) (keys.Root, keys.Master, keys.Header, error) {
@@ -49,15 +49,15 @@ func (tc testRootChainCrypto) AdvanceChain(
 
 type testSendingChainCrypto struct{}
 
-func (tc testSendingChainCrypto) AdvanceChain(_ keys.Master) (keys.Master, keys.Message, error) {
+func (testSendingChainCrypto) AdvanceChain(_ keys.Master) (keys.Master, keys.Message, error) {
 	return keys.Master{}, keys.Message{}, nil
 }
 
-func (tc testSendingChainCrypto) EncryptHeader(_ keys.Header, _ header.Header) ([]byte, error) {
+func (testSendingChainCrypto) EncryptHeader(_ keys.Header, _ header.Header) ([]byte, error) {
 	return nil, nil
 }
 
-func (tc testSendingChainCrypto) EncryptMessage(_ keys.Message, _, _ []byte) ([]byte, error) {
+func (testSendingChainCrypto) EncryptMessage(_ keys.Message, _, _ []byte) ([]byte, error) {
 	return nil, nil
 }
 

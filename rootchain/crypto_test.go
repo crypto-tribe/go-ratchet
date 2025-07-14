@@ -12,9 +12,13 @@ var defaultCryptoAdvanceChainTests = []struct {
 	rootKey   keys.Root
 	sharedKey keys.Shared
 }{
-	{"zero keys", keys.Root{}, keys.Shared{}},
 	{
-		"full shared key and zero root key",
+		"zero keys",
+		keys.Root{},
+		keys.Shared{},
+	},
+	{
+		"non-empty shared key and zero root key",
 		keys.Root{},
 		keys.Shared{
 			Bytes: []byte{1, 2, 3, 4, 5, 6, 7, 8},
@@ -44,6 +48,8 @@ func TestDefaultCryptoAdvanceChain(t *testing.T) {
 	crypto := newDefaultCrypto()
 
 	for _, test := range defaultCryptoAdvanceChainTests {
+		test := test
+
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 

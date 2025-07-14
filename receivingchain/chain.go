@@ -10,7 +10,7 @@ import (
 	"github.com/lyreware/go-utils/slices"
 )
 
-// Ratchet receiving chain.
+// Chain is the ratchet receiving chain.
 //
 // Please note that this structure may corrupt its state in case of errors.
 // Therefore, clone the data at the top level and replace the current data
@@ -23,6 +23,7 @@ type Chain struct {
 	cfg               config
 }
 
+// New creates a new receiving chain.
 func New(
 	masterKey *keys.Master,
 	headerKey *keys.Header,
@@ -47,6 +48,7 @@ func New(
 	return chain, nil
 }
 
+// Clone clones receiving chain.
 func (ch Chain) Clone() Chain {
 	ch.masterKey = ch.masterKey.ClonePtr()
 	ch.headerKey = ch.headerKey.ClonePtr()
@@ -56,6 +58,8 @@ func (ch Chain) Clone() Chain {
 	return ch
 }
 
+// Decrypt decrypts passed encrypted header and encrypted data and authenticates
+// them with auth. Also calls ratchet callback if ratchet is needed.
 func (ch *Chain) Decrypt(
 	encryptedHeader []byte,
 	encryptedData []byte,
@@ -106,6 +110,7 @@ func (ch *Chain) Decrypt(
 	return decryptedData, nil
 }
 
+// Upgrade upgrades receiving chain with new starting values.
 func (ch *Chain) Upgrade(masterKey keys.Master, nextHeaderKey keys.Header) {
 	ch.masterKey = &masterKey
 	ch.headerKey = &ch.nextHeaderKey
@@ -129,7 +134,8 @@ func (ch *Chain) advance() (keys.Message, error) {
 	return messageKey, nil
 }
 
-// decryptHeaderWithCurrentOrNextKeys must decrypt passed encrypted header with current or next header key.
+// decryptHeaderWithCurrentOrNextKeys must decrypt passed encrypted header with
+// current or next header key.
 //
 // Note that ratchet is needed if header decrypted with next header key.
 func (ch *Chain) decryptHeaderWithCurrentOrNextKey(

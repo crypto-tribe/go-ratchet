@@ -6,7 +6,6 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/lyreware/go-ratchet/errlist"
 	"github.com/lyreware/go-ratchet/keys"
 )
 
@@ -16,7 +15,15 @@ var successEncodeAndDecodeTests = []struct {
 	bytes  []byte
 }{
 	{
-		"full header",
+		"zero header",
+		Header{},
+		[]byte{
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		},
+	},
+	{
+		"non-empty header",
 		Header{
 			PublicKey: keys.Public{
 				Bytes: []byte{0x01, 0x02, 0x03, 0x04, 0x05},
@@ -30,20 +37,14 @@ var successEncodeAndDecodeTests = []struct {
 			0x01, 0x02, 0x03, 0x04, 0x05,
 		},
 	},
-	{
-		"zero header",
-		Header{},
-		[]byte{
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		},
-	},
 }
 
 func TestSuccessEncodeAndDecode(t *testing.T) {
 	t.Parallel()
 
 	for _, test := range successEncodeAndDecodeTests {
+		test := test
+
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -67,8 +68,7 @@ func TestSuccessEncodeAndDecode(t *testing.T) {
 var decodeTests = []struct {
 	name          string
 	bytes         []byte
-	errorCategory error
-	errorString   string
+	errCategories []error
 }{
 	{
 		"not enough bytes",
@@ -76,14 +76,16 @@ var decodeTests = []struct {
 			0x12, 0x00, 0x00, 0x00, 0x22, 0x00, 0x00, 0x0F,
 			0x55, 0x00, 0x00, 0x00, 0x77, 0x00, 0x0B,
 		},
-		errlist.ErrInvalidValue,
-		"invalid value: not enough bytes",
+		[]error{
+			ErrNotEnoughBytes,
+		},
 	},
 	{
 		"nil bytes slice",
 		nil,
-		errlist.ErrInvalidValue,
-		"invalid value: not enough bytes",
+		[]error{
+			ErrNotEnoughBytes,
+		},
 	},
 }
 
@@ -91,17 +93,17 @@ func TestDecode(t *testing.T) {
 	t.Parallel()
 
 	for _, test := range decodeTests {
+		test := test
+
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
 			_, err := Decode(test.bytes)
-			if !errors.Is(err, test.errorCategory) || err.Error() != test.errorString {
-				t.Fatalf(
-					"Decode(%v) expected error %q but got %v",
-					test.bytes,
-					test.errorString,
-					err,
-				)
+
+			for _, errCategory := range test.errCategories {
+				if !errors.Is(err, errCategory) {
+					t.Fatalf("Decode(%v) expected error %q but got %v", test.bytes, errCategory, err)
+				}
 			}
 		})
 	}

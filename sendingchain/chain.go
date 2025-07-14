@@ -1,16 +1,15 @@
 package sendingchain
 
 import (
-	"fmt"
+	"errors"
 
-	"github.com/lyreware/go-ratchet/errlist"
 	"github.com/lyreware/go-ratchet/header"
 	"github.com/lyreware/go-ratchet/keys"
 	"github.com/lyreware/go-utils/convert"
 	"github.com/lyreware/go-utils/slices"
 )
 
-// Ratchet sending chain.
+// Chain is the ratchet sending chain.
 //
 // Please note that this structure may corrupt its state in case of errors.
 // Therefore, clone the data at the top level and replace the current data
@@ -24,6 +23,7 @@ type Chain struct {
 	cfg                        config
 }
 
+// New creates a new sending chain.
 func New(
 	masterKey *keys.Master,
 	headerKey *keys.Header,
@@ -44,12 +44,13 @@ func New(
 
 	chain.cfg, err = newConfig(options...)
 	if err != nil {
-		return Chain{}, fmt.Errorf("new config: %w", err)
+		return Chain{}, errors.Join(ErrNewConfig, err)
 	}
 
 	return chain, nil
 }
 
+// Clone clones sending chain.
 func (ch Chain) Clone() Chain {
 	ch.masterKey = ch.masterKey.ClonePtr()
 	ch.headerKey = ch.headerKey.ClonePtr()
@@ -58,35 +59,37 @@ func (ch Chain) Clone() Chain {
 	return ch
 }
 
+// Encrypt encrypts passed header and data and authenticates with passed auth.
 func (ch *Chain) Encrypt(
-	header header.Header,
+	head header.Header,
 	data []byte,
 	auth []byte,
 ) (encryptedHeader []byte, encryptedData []byte, err error) {
 	if ch.headerKey == nil {
-		return nil, nil, fmt.Errorf("%w: header key is nil", errlist.ErrInvalidValue)
+		return nil, nil, ErrHeaderKeyIsNil
 	}
 
-	encryptedHeader, err = ch.cfg.crypto.EncryptHeader(*ch.headerKey, header)
+	encryptedHeader, err = ch.cfg.crypto.EncryptHeader(*ch.headerKey, head)
 	if err != nil {
-		return nil, nil, fmt.Errorf("%w: encrypt header: %w", errlist.ErrCrypto, err)
+		return nil, nil, errors.Join(ErrEncryptHeader, err)
 	}
 
 	messageKey, err := ch.advance()
 	if err != nil {
-		return nil, nil, fmt.Errorf("advance chain: %w", err)
+		return nil, nil, errors.Join(ErrAdvance, err)
 	}
 
 	auth = slices.ConcatBytes(encryptedHeader, auth)
 
 	encryptedData, err = ch.cfg.crypto.EncryptMessage(messageKey, data, auth)
 	if err != nil {
-		return nil, nil, fmt.Errorf("%w: encrypt message: %w", errlist.ErrCrypto, err)
+		return nil, nil, errors.Join(ErrCryptoEncryptMessage, err)
 	}
 
 	return encryptedHeader, encryptedData, nil
 }
 
+// PrepareHeader prepares a new header to send.
 func (ch *Chain) PrepareHeader(publicKey keys.Public) header.Header {
 	head := header.Header{
 		PublicKey:                         publicKey,
@@ -97,6 +100,7 @@ func (ch *Chain) PrepareHeader(publicKey keys.Public) header.Header {
 	return head
 }
 
+// Upgrade upgrades sending chain with new starting values.
 func (ch *Chain) Upgrade(masterKey keys.Master, nextHeaderKey keys.Header) {
 	ch.masterKey = &masterKey
 	ch.headerKey = convert.ToPtr(ch.nextHeaderKey.Clone())
@@ -107,12 +111,12 @@ func (ch *Chain) Upgrade(masterKey keys.Master, nextHeaderKey keys.Header) {
 
 func (ch *Chain) advance() (keys.Message, error) {
 	if ch.masterKey == nil {
-		return keys.Message{}, fmt.Errorf("%w: master key is nil", errlist.ErrInvalidValue)
+		return keys.Message{}, ErrMasterKeyIsNil
 	}
 
 	newMasterKey, messageKey, err := ch.cfg.crypto.AdvanceChain(*ch.masterKey)
 	if err != nil {
-		return keys.Message{}, fmt.Errorf("%w: advance via crypto: %w", errlist.ErrCrypto, err)
+		return keys.Message{}, errors.Join(ErrCryptoAdvance, err)
 	}
 
 	ch.masterKey = &newMasterKey
