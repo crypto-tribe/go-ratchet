@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/lyreware/go-ratchet/errlist"
 	"github.com/lyreware/go-ratchet/header"
 	"github.com/lyreware/go-ratchet/keys"
 	cipher "golang.org/x/crypto/chacha20poly1305"
@@ -25,7 +24,7 @@ var newChainTests = []struct {
 	args          newChainTestArgs
 	errCategories []error
 }{
-	{"zero args and no options", newChainTestArgs{}, nil, ""},
+	{"zero args and no options", newChainTestArgs{}, nil},
 	{
 		"non-empty args and crypto option",
 		newChainTestArgs{
@@ -65,8 +64,6 @@ func TestNewChain(t *testing.T) {
 	t.Parallel()
 
 	for _, test := range newChainTests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -178,8 +175,6 @@ func TestChainClone(t *testing.T) {
 	t.Parallel()
 
 	for _, test := range chainCloneTests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -279,9 +274,8 @@ var chainEncryptTests = []struct {
 			[]byte{6, 7, 8, 9},
 			[]byte{3, 2, 1},
 		},
-		"advance chain: invalid value: master key is nil",
 		[]error{
-			ErrAdvance,
+			ErrAdvanceChain,
 			ErrMasterKeyIsNil,
 		},
 	},
@@ -289,7 +283,7 @@ var chainEncryptTests = []struct {
 		"nil header key",
 		chainEncryptTestArgs{
 			&keys.Master{
-				Bytes: []byte{1, 2, 3},,
+				Bytes: []byte{1, 2, 3},
 			},
 			nil,
 			keys.Header{},
@@ -299,7 +293,7 @@ var chainEncryptTests = []struct {
 		},
 		[]error{
 			ErrHeaderKeyIsNil,
-		}
+		},
 	},
 	{
 		"short header key",
@@ -315,7 +309,7 @@ var chainEncryptTests = []struct {
 			[]byte{6, 7, 8, 9},
 			[]byte{3, 2, 1},
 		},
-		[]errors{
+		[]error{
 			ErrEncryptHeader,
 			ErrNewCipher,
 		},
@@ -346,9 +340,6 @@ func TestChainEncrypt(t *testing.T) {
 	t.Parallel()
 
 	for testIndex, test := range chainEncryptTests {
-		testIndex := testIndex
-		test := test
-
 		chain, err := New(
 			test.args.masterKey,
 			test.args.headerKey,
@@ -372,27 +363,31 @@ func TestChainEncrypt(t *testing.T) {
 				)
 			}
 
-			encryptedHeader, encryptedData, err := chain.Encrypt(header, test.data, test.auth)
+			encryptedHeader, encryptedData, err := chain.Encrypt(
+				header,
+				test.args.data,
+				test.args.auth,
+			)
 			if err != nil && len(test.errCategories) == 0 {
 				t.Fatalf(
 					"%+v.Encrypt(%+v, %v, %v) expected no error but got %v",
 					chain,
 					header,
-					test.data,
-					test.auth,
+					test.args.data,
+					test.args.auth,
 					err,
 				)
 			}
 
 			for _, errCategory := range test.errCategories {
-				if !errors.Is(err, test.errCategory) {
+				if !errors.Is(err, errCategory) {
 					t.Fatalf(
 						"%+v.Encrypt(%+v, %v, %v) expected error category %v but got %v",
 						chain,
 						header,
-						test.data,
-						test.auth,
-						test.errCategory,
+						test.args.data,
+						test.args.auth,
+						errCategory,
 						err,
 					)
 				}
@@ -407,8 +402,8 @@ func TestChainEncrypt(t *testing.T) {
 					"%+v.Encrypt(%+v, %v, %v) returned empty encrypted header",
 					chain,
 					header,
-					test.data,
-					test.auth,
+					test.args.data,
+					test.args.auth,
 				)
 			}
 
@@ -417,8 +412,8 @@ func TestChainEncrypt(t *testing.T) {
 					"%+v.Encrypt(%+v, %v, %v) returned empty encrypted data",
 					chain,
 					header,
-					test.data,
-					test.auth,
+					test.args.data,
+					test.args.auth,
 				)
 			}
 
@@ -427,18 +422,18 @@ func TestChainEncrypt(t *testing.T) {
 					"%+v.Encrypt(%+v, %v, %v) returned input header bytes",
 					chain,
 					header,
-					test.data,
-					test.auth,
+					test.args.data,
+					test.args.auth,
 				)
 			}
 
-			if reflect.DeepEqual(encryptedData, test.data) {
+			if reflect.DeepEqual(encryptedData, test.args.data) {
 				t.Fatalf(
 					"%+v.Encrypt(%+v, %v, %v) returned input data",
 					chain,
 					header,
-					test.data,
-					test.auth,
+					test.args.data,
+					test.args.auth,
 				)
 			}
 		})
@@ -480,8 +475,6 @@ func TestChainPrepareHeader(t *testing.T) {
 	t.Parallel()
 
 	for _, test := range chainPrepareHeaderTests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 

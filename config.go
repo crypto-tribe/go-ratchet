@@ -1,9 +1,8 @@
 package ratchet
 
 import (
-	"fmt"
+	"errors"
 
-	"github.com/lyreware/go-ratchet/errlist"
 	"github.com/lyreware/go-ratchet/receivingchain"
 	"github.com/lyreware/go-ratchet/rootchain"
 	"github.com/lyreware/go-ratchet/sendingchain"
@@ -24,7 +23,7 @@ func newConfig(options ...Option) (config, error) {
 
 	err := cfg.applyOptions(options...)
 	if err != nil {
-		return config{}, fmt.Errorf("%w: %w", errlist.ErrOption, err)
+		return config{}, errors.Join(ErrApplyOptions, err)
 	}
 
 	return cfg, nil
@@ -48,7 +47,7 @@ type Option func(cfg *config) error
 func WithCrypto(crypto Crypto) Option {
 	return func(cfg *config) error {
 		if check.IsNil(crypto) {
-			return fmt.Errorf("%w: crypto is nil", errlist.ErrInvalidValue)
+			return ErrCryptoIsNil
 		}
 
 		cfg.crypto = crypto

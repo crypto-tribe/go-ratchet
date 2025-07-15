@@ -5,20 +5,23 @@ import (
 )
 
 var (
-	// ErrAdvance is the chain advance error.
-	ErrAdvance = errors.New("advance")
+	// ErrAdvanceChain is the chain advance error.
+	ErrAdvanceChain = errors.New("advance chain")
 
 	// ErrApplyOptions is the config options apply error.
 	ErrApplyOptions = errors.New("apply options")
 
-	// ErrCryptoAdvance is an error to advance using crypto from config.
-	ErrCryptoAdvance = errors.New("crypto advance")
+	// ErrCryptoAdvanceChain is an error to advance using crypto from config.
+	ErrCryptoAdvanceChain = errors.New("crypto advance chain")
 
 	// ErrCryptoIsNil is an error when crypto is nil.
 	ErrCryptoIsNil = errors.New("crypto is nil")
 
 	// ErrDeriveMessageCipherKeyAndNonce is the key and nonce derivation error.
 	ErrDeriveMessageCipherKeyAndNonce = errors.New("derive message cipher key and nonce")
+
+	// ErrEncrypt is the encryption error.
+	ErrEncrypt = errors.New("encrypt")
 
 	// ErrEncryptHeader is the header encryption error.
 	ErrEncryptHeader = errors.New("encrypt header")

@@ -3,7 +3,7 @@ package ratchet
 import (
 	"crypto/ecdh"
 	"crypto/rand"
-	"fmt"
+	"errors"
 
 	"github.com/lyreware/go-ratchet/keys"
 )
@@ -32,17 +32,17 @@ func (c defaultCrypto) ComputeSharedKey(
 ) (keys.Shared, error) {
 	foreignPrivateKey, err := c.curve.NewPrivateKey(privateKey.Bytes)
 	if err != nil {
-		return keys.Shared{}, fmt.Errorf("map to foreign private key: %w", err)
+		return keys.Shared{}, errors.Join(ErrNewPrivateKey, err)
 	}
 
 	foreignPublicKey, err := c.curve.NewPublicKey(publicKey.Bytes)
 	if err != nil {
-		return keys.Shared{}, fmt.Errorf("map to foreign public key: %w", err)
+		return keys.Shared{}, errors.Join(ErrNewPublicKey, err)
 	}
 
 	sharedKeyBytes, err := foreignPrivateKey.ECDH(foreignPublicKey)
 	if err != nil {
-		return keys.Shared{}, fmt.Errorf("Diffie-Hellman: %w", err)
+		return keys.Shared{}, errors.Join(ErrDiffieHellman, err)
 	}
 
 	sharedKey := keys.Shared{
@@ -55,7 +55,7 @@ func (c defaultCrypto) ComputeSharedKey(
 func (c defaultCrypto) GenerateKeyPair() (keys.Private, keys.Public, error) {
 	foreignPrivateKey, err := c.curve.GenerateKey(rand.Reader)
 	if err != nil {
-		return keys.Private{}, keys.Public{}, fmt.Errorf("generate private key: %w", err)
+		return keys.Private{}, keys.Public{}, errors.Join(ErrGeneratePrivateKey, err)
 	}
 
 	privateKey := keys.Private{

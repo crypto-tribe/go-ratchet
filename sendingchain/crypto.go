@@ -82,7 +82,7 @@ func (c defaultCrypto) EncryptHeader(key keys.Header, head header.Header) ([]byt
 
 	encryptedHeader, err := c.encrypt(key.Bytes, nonce[:], head.Encode(), nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.Join(ErrEncrypt, err)
 	}
 
 	encryptedHeader = slices.ConcatBytes(nonce[:], encryptedHeader)
@@ -98,7 +98,7 @@ func (c defaultCrypto) EncryptMessage(key keys.Message, message, auth []byte) ([
 
 	encryptedMessage, err := c.encrypt(cipherKey, nonce, message, auth)
 	if err != nil {
-		return nil, err
+		return nil, errors.Join(ErrEncrypt, err)
 	}
 
 	return encryptedMessage, nil

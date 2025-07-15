@@ -1,9 +1,8 @@
 package ratchet
 
 import (
-	"fmt"
+	"errors"
 
-	"github.com/lyreware/go-ratchet/errlist"
 	"github.com/lyreware/go-ratchet/keys"
 	"github.com/lyreware/go-ratchet/receivingchain"
 	"github.com/lyreware/go-ratchet/rootchain"
@@ -45,12 +44,12 @@ func NewRecipient(
 
 	ratchet.cfg, err = newConfig(options...)
 	if err != nil {
-		return Ratchet{}, fmt.Errorf("new config: %w", err)
+		return Ratchet{}, errors.Join(ErrNewConfig, err)
 	}
 
 	ratchet.rootChain, err = rootchain.New(rootKey, ratchet.cfg.rootOptions...)
 	if err != nil {
-		return Ratchet{}, fmt.Errorf("new root chain: %w", err)
+		return Ratchet{}, errors.Join(ErrNewRootChain, err)
 	}
 
 	ratchet.sendingChain, err = sendingchain.New(
@@ -62,7 +61,7 @@ func NewRecipient(
 		ratchet.cfg.sendingOptions...,
 	)
 	if err != nil {
-		return Ratchet{}, fmt.Errorf("new sending chain: %w", err)
+		return Ratchet{}, errors.Join(ErrNewSendingChain, err)
 	}
 
 	ratchet.receivingChain, err = receivingchain.New(
@@ -73,7 +72,7 @@ func NewRecipient(
 		ratchet.cfg.receivingOptions...,
 	)
 	if err != nil {
-		return Ratchet{}, fmt.Errorf("new receiving chain: %w", err)
+		return Ratchet{}, errors.Join(ErrNewReceivingChain, err)
 	}
 
 	return ratchet, nil
@@ -97,27 +96,27 @@ func NewSender(
 
 	ratchet.cfg, err = newConfig(options...)
 	if err != nil {
-		return Ratchet{}, fmt.Errorf("new config: %w", err)
+		return Ratchet{}, errors.Join(ErrNewConfig, err)
 	}
 
 	ratchet.localPrivateKey, ratchet.localPublicKey, err = ratchet.cfg.crypto.GenerateKeyPair()
 	if err != nil {
-		return Ratchet{}, fmt.Errorf("%w: generate key pair: %w", errlist.ErrCrypto, err)
+		return Ratchet{}, errors.Join(ErrGenerateKeyPair, err)
 	}
 
 	sharedKey, err := ratchet.cfg.crypto.ComputeSharedKey(ratchet.localPrivateKey, remotePublicKey)
 	if err != nil {
-		return Ratchet{}, fmt.Errorf("%w: compute shared key: %w", errlist.ErrCrypto, err)
+		return Ratchet{}, errors.Join(ErrComputeSharedKey, err)
 	}
 
 	ratchet.rootChain, err = rootchain.New(rootKey, ratchet.cfg.rootOptions...)
 	if err != nil {
-		return Ratchet{}, fmt.Errorf("new root chain: %w", err)
+		return Ratchet{}, errors.Join(ErrNewRootChain, err)
 	}
 
 	sendingChainKey, sendingChainNextHeaderKey, err := ratchet.rootChain.Advance(sharedKey)
 	if err != nil {
-		return Ratchet{}, fmt.Errorf("advance root chain: %w", err)
+		return Ratchet{}, errors.Join(ErrAdvanceRootChain, err)
 	}
 
 	ratchet.sendingChain, err = sendingchain.New(
@@ -129,7 +128,7 @@ func NewSender(
 		ratchet.cfg.sendingOptions...,
 	)
 	if err != nil {
-		return Ratchet{}, fmt.Errorf("new sending chain: %w", err)
+		return Ratchet{}, errors.Join(ErrNewSendingChain, err)
 	}
 
 	ratchet.receivingChain, err = receivingchain.New(
@@ -140,7 +139,7 @@ func NewSender(
 		ratchet.cfg.receivingOptions...,
 	)
 	if err != nil {
-		return Ratchet{}, fmt.Errorf("new receiving chain: %w", err)
+		return Ratchet{}, errors.Join(ErrNewReceivingChain, err)
 	}
 
 	return ratchet, nil
@@ -177,13 +176,13 @@ func (r *Ratchet) Decrypt(
 			r.ratchetReceivingChain,
 		)
 		if err != nil {
-			return fmt.Errorf("decrypt: %w", err)
+			return errors.Join(ErrReceivingChainDecrypt, err)
 		}
 
 		return nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("do: %w", err)
+		return nil, errors.Join(ErrAtomicDo, err)
 	}
 
 	return decryptedData, nil
@@ -197,20 +196,20 @@ func (r *Ratchet) Encrypt(
 	err = atomic.Do(r, r.Clone(), func(rDirty *Ratchet) error {
 		err = rDirty.ratchetSendingChainIfNeeded()
 		if err != nil {
-			return fmt.Errorf("ratchet sending chain: %w", err)
+			return errors.Join(ErrRatchetSendingChain, err)
 		}
 
 		header := rDirty.sendingChain.PrepareHeader(rDirty.localPublicKey)
 
 		encryptedHeader, encryptedData, err = rDirty.sendingChain.Encrypt(header, data, auth)
 		if err != nil {
-			return fmt.Errorf("encrypt: %w", err)
+			return errors.Join(ErrSendingChainEncrypt, err)
 		}
 
 		return nil
 	})
 	if err != nil {
-		return nil, nil, fmt.Errorf("do: %w", err)
+		return nil, nil, errors.Join(ErrAtomicDo, err)
 	}
 
 	return encryptedHeader, encryptedData, nil
@@ -221,16 +220,12 @@ func (r *Ratchet) ratchetReceivingChain(remotePublicKey keys.Public) error {
 
 	sharedKey, err := r.cfg.crypto.ComputeSharedKey(r.localPrivateKey, remotePublicKey)
 	if err != nil {
-		return fmt.Errorf(
-			"%w: compute shared secret key for receiving chain upgrade: %w",
-			errlist.ErrCrypto,
-			err,
-		)
+		return errors.Join(ErrComputeSharedKey, err)
 	}
 
 	newMasterKey, newNextHeaderKey, err := r.rootChain.Advance(sharedKey)
 	if err != nil {
-		return fmt.Errorf("advance root chain for receiving chain upgrade: %w", err)
+		return errors.Join(ErrAdvanceRootChain, err)
 	}
 
 	r.receivingChain.Upgrade(newMasterKey, newNextHeaderKey)
@@ -248,25 +243,21 @@ func (r *Ratchet) ratchetSendingChainIfNeeded() error {
 
 	r.localPrivateKey, r.localPublicKey, err = r.cfg.crypto.GenerateKeyPair()
 	if err != nil {
-		return fmt.Errorf("%w: generate new key pair: %w", errlist.ErrCrypto, err)
+		return errors.Join(ErrGenerateKeyPair, err)
 	}
 
 	if r.remotePublicKey == nil {
-		return fmt.Errorf("%w: remote public key is nil", errlist.ErrInvalidValue)
+		return ErrRemotePublicKeyIsNil
 	}
 
 	sharedKey, err := r.cfg.crypto.ComputeSharedKey(r.localPrivateKey, *r.remotePublicKey)
 	if err != nil {
-		return fmt.Errorf(
-			"%w: compute shared secret key for sending chain upgrade: %w",
-			errlist.ErrCrypto,
-			err,
-		)
+		return errors.Join(ErrComputeSharedKey, err)
 	}
 
 	newMasterKey, newNextHeaderKey, err := r.rootChain.Advance(sharedKey)
 	if err != nil {
-		return fmt.Errorf("advance root chain for sending chain upgrade: %w", err)
+		return errors.Join(ErrAdvanceRootChain, err)
 	}
 
 	r.sendingChain.Upgrade(newMasterKey, newNextHeaderKey)

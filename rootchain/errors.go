@@ -5,11 +5,11 @@ import (
 )
 
 var (
+	// ErrAdvanceChain is the chain crypto advance error.
+	ErrAdvanceChain = errors.New("advance")
+
 	// ErrApplyOptions is config options apply error.
 	ErrApplyOptions = errors.New("apply options")
-
-	// ErrCryptoAdvance is the chain crypto advance error.
-	ErrCryptoAdvance = errors.New("advance")
 
 	// ErrCryptoIsNil is an error when nil crypto was passed.
 	ErrCryptoIsNil = errors.New("crypto is nil")

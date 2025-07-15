@@ -1,8 +1,6 @@
 package receivingchain
 
 import (
-	"fmt"
-
 	"github.com/lyreware/go-ratchet/keys"
 )
 
@@ -60,11 +58,7 @@ func (st defaultSkippedKeysStorage) Add(
 
 	stKey := st.convertToKey(headerKey)
 	if len(st[stKey]) >= defaultSkippedKeysStorageMessageKeysLenLimit {
-		return fmt.Errorf(
-			"too many message keys: %d >= %d",
-			len(st[stKey]),
-			defaultSkippedKeysStorageMessageKeysLenLimit,
-		)
+		return ErrTooManySkippedMessageKeys
 	}
 
 	if _, ok := st[stKey]; !ok {

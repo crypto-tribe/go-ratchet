@@ -76,14 +76,14 @@ func (ch *Chain) Encrypt(
 
 	messageKey, err := ch.advance()
 	if err != nil {
-		return nil, nil, errors.Join(ErrAdvance, err)
+		return nil, nil, errors.Join(ErrAdvanceChain, err)
 	}
 
 	auth = slices.ConcatBytes(encryptedHeader, auth)
 
 	encryptedData, err = ch.cfg.crypto.EncryptMessage(messageKey, data, auth)
 	if err != nil {
-		return nil, nil, errors.Join(ErrCryptoEncryptMessage, err)
+		return nil, nil, errors.Join(ErrEncryptMessage, err)
 	}
 
 	return encryptedHeader, encryptedData, nil
@@ -116,7 +116,7 @@ func (ch *Chain) advance() (keys.Message, error) {
 
 	newMasterKey, messageKey, err := ch.cfg.crypto.AdvanceChain(*ch.masterKey)
 	if err != nil {
-		return keys.Message{}, errors.Join(ErrCryptoAdvance, err)
+		return keys.Message{}, errors.Join(ErrCryptoAdvanceChain, err)
 	}
 
 	ch.masterKey = &newMasterKey

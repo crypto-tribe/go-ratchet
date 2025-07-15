@@ -17,7 +17,7 @@ func (testCrypto) AdvanceChain(
 	return keys.Root{}, keys.Master{}, keys.Header{}, nil
 }
 
-var newConfigTests = []struct{
+var newConfigTests = []struct {
 	name           string
 	options        []Option
 	errCategories  []error
@@ -54,8 +54,6 @@ func TestNewConfig(t *testing.T) {
 	t.Parallel()
 
 	for _, test := range newConfigTests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -63,6 +61,7 @@ func TestNewConfig(t *testing.T) {
 			if err != nil && len(test.errCategories) == 0 {
 				t.Fatalf("newConfig() expected no error but got %v", err)
 			}
+
 			for _, errCategory := range test.errCategories {
 				if !errors.Is(err, errCategory) {
 					t.Fatalf("newConfig() expected error %v but got %v", errCategory, err)
@@ -78,5 +77,4 @@ func TestNewConfig(t *testing.T) {
 			}
 		})
 	}
-
 }

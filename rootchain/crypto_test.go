@@ -48,8 +48,6 @@ func TestDefaultCryptoAdvanceChain(t *testing.T) {
 	crypto := newDefaultCrypto()
 
 	for _, test := range defaultCryptoAdvanceChainTests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 

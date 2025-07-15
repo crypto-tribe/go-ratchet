@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/lyreware/go-ratchet/errlist"
 	"github.com/lyreware/go-ratchet/keys"
 )
 
@@ -44,8 +43,6 @@ func TestNewChain(t *testing.T) {
 	t.Parallel()
 
 	for _, test := range newChainTests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -100,8 +97,6 @@ func TestChainAdvance(t *testing.T) {
 	}
 
 	for _, test := range chainAdvanceTests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -153,8 +148,6 @@ func TestChainClone(t *testing.T) {
 	t.Parallel()
 
 	for _, test := range chainCloneTests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 

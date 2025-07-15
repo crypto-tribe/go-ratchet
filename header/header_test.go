@@ -43,8 +43,6 @@ func TestSuccessEncodeAndDecode(t *testing.T) {
 	t.Parallel()
 
 	for _, test := range successEncodeAndDecodeTests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -93,8 +91,6 @@ func TestDecode(t *testing.T) {
 	t.Parallel()
 
 	for _, test := range decodeTests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -102,7 +98,12 @@ func TestDecode(t *testing.T) {
 
 			for _, errCategory := range test.errCategories {
 				if !errors.Is(err, errCategory) {
-					t.Fatalf("Decode(%v) expected error %q but got %v", test.bytes, errCategory, err)
+					t.Fatalf(
+						"Decode(%v) expected error %q but got %v",
+						test.bytes,
+						errCategory,
+						err,
+					)
 				}
 			}
 		})

@@ -4,7 +4,5 @@ import (
 	"errors"
 )
 
-var (
-	// ErrNotEnoughBytes is an error when not enough bytes passed.
-	ErrNotEnoughBytes = errors.New("not enough bytes")
-)
+// ErrNotEnoughBytes is an error when not enough bytes passed.
+var ErrNotEnoughBytes = errors.New("not enough bytes")

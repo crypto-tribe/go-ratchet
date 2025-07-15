@@ -2,7 +2,7 @@ package receivingchain
 
 import (
 	"crypto/hmac"
-	"fmt"
+	"errors"
 	"hash"
 
 	"github.com/lyreware/go-ratchet/chainscommon"
@@ -21,17 +21,18 @@ type Crypto interface {
 
 type defaultCrypto struct{}
 
-func newDefaultCrypto() (crypto defaultCrypto) {
+func newDefaultCrypto() defaultCrypto {
+	crypto := defaultCrypto{}
+
 	return crypto
 }
 
 func (defaultCrypto) AdvanceChain(masterKey keys.Master) (keys.Master, keys.Message, error) {
-	var newHashErr error
+	var newHasherErr error
 
 	getHasher := func() hash.Hash {
-		var hasher hash.Hash
-
-		hasher, newHashErr = blake2b.New512(nil)
+		hasher, err := blake2b.New512(nil)
+		newHasherErr = err
 
 		return hasher
 	}
@@ -42,11 +43,7 @@ func (defaultCrypto) AdvanceChain(masterKey keys.Master) (keys.Master, keys.Mess
 
 	_, err := mac.Write([]byte{masterKeyByte})
 	if err != nil {
-		return keys.Master{}, keys.Message{}, fmt.Errorf(
-			"write %d byte to MAC: %w",
-			masterKeyByte,
-			err,
-		)
+		return keys.Master{}, keys.Message{}, errors.Join(ErrWriteMasterKeyByteToMAC, err)
 	}
 
 	newMasterKey := keys.Master{
@@ -58,19 +55,15 @@ func (defaultCrypto) AdvanceChain(masterKey keys.Master) (keys.Master, keys.Mess
 
 	_, err = mac.Write([]byte{messageKeyByte})
 	if err != nil {
-		return keys.Master{}, keys.Message{}, fmt.Errorf(
-			"write %d byte to MAC: %w",
-			messageKeyByte,
-			err,
-		)
+		return keys.Master{}, keys.Message{}, errors.Join(ErrWriteMessageKeyByteToMAC, err)
 	}
 
 	messageKey := keys.Message{
 		Bytes: mac.Sum(nil),
 	}
 
-	if newHashErr != nil {
-		return keys.Master{}, keys.Message{}, fmt.Errorf("new hash: %w", newHashErr)
+	if newHasherErr != nil {
+		return keys.Master{}, keys.Message{}, errors.Join(ErrNewHasher, newHasherErr)
 	}
 
 	return newMasterKey, messageKey, nil
@@ -79,12 +72,9 @@ func (defaultCrypto) AdvanceChain(masterKey keys.Master) (keys.Master, keys.Mess
 func (c defaultCrypto) DecryptHeader(
 	key keys.Header,
 	encryptedHeader []byte,
-) (decryptedHeader header.Header, err error) {
+) (header.Header, error) {
 	if len(encryptedHeader) <= cipher.NonceSizeX {
-		return header.Header{}, fmt.Errorf(
-			"encrpted header too short, expected at least %d bytes",
-			cipher.NonceSizeX+1,
-		)
+		return header.Header{}, ErrNotEnoughEncryptedHeaderBytes
 	}
 
 	decryptedHeaderBytes, err := c.decrypt(
@@ -94,12 +84,12 @@ func (c defaultCrypto) DecryptHeader(
 		nil,
 	)
 	if err != nil {
-		return header.Header{}, fmt.Errorf("decrypt: %w", err)
+		return header.Header{}, err
 	}
 
-	decryptedHeader, err = header.Decode(decryptedHeaderBytes)
+	decryptedHeader, err := header.Decode(decryptedHeaderBytes)
 	if err != nil {
-		return header.Header{}, fmt.Errorf("decode decrypted header: %w", err)
+		return header.Header{}, errors.Join(ErrDecodeHeader, err)
 	}
 
 	return decryptedHeader, nil
@@ -112,12 +102,12 @@ func (c defaultCrypto) DecryptMessage(
 ) ([]byte, error) {
 	cipherKey, nonce, err := chainscommon.DeriveMessageCipherKeyAndNonce(key)
 	if err != nil {
-		return nil, fmt.Errorf("derive key and nonce: %w", err)
+		return nil, errors.Join(ErrDeriveMessageCipherKeyAndNonce, err)
 	}
 
 	decryptedMessage, err := c.decrypt(cipherKey, nonce, encryptedMessage, auth)
 	if err != nil {
-		return nil, fmt.Errorf("decrypt: %w", err)
+		return nil, errors.Join(ErrDecrypt, err)
 	}
 
 	return decryptedMessage, nil
@@ -126,12 +116,12 @@ func (c defaultCrypto) DecryptMessage(
 func (defaultCrypto) decrypt(key, nonce, encryptedData, auth []byte) ([]byte, error) {
 	cipherX, err := cipher.NewX(key)
 	if err != nil {
-		return nil, fmt.Errorf("new cipher: %w", err)
+		return nil, errors.Join(ErrNewCipher, err)
 	}
 
 	decryptedData, err := cipherX.Open(nil, nonce, encryptedData, auth)
 	if err != nil {
-		return nil, fmt.Errorf("decrypt: %w", err)
+		return nil, errors.Join(ErrOpenCipher, err)
 	}
 
 	return decryptedData, nil

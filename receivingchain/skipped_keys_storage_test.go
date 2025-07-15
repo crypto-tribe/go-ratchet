@@ -2,89 +2,78 @@ package receivingchain
 
 import (
 	"encoding/binary"
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/lyreware/go-ratchet/keys"
 	"github.com/lyreware/go-utils/sizes"
 )
 
-func TestDefaultSkippedKeysStorageAdd(t *testing.T) {
+func TestDefaultSkippedKeysStorageAddClear(t *testing.T) {
 	t.Parallel()
 
-	t.Run("test clear", func(t *testing.T) {
-		t.Parallel()
+	storage := newDefaultSkippedKeysStorage()
 
-		storage := newDefaultSkippedKeysStorage()
-
-		for headerNumber := range defaultSkippedKeysStorageHeaderKeysLenToClear {
-			var bytes [sizes.Uint64]byte
-			binary.LittleEndian.PutUint64(bytes[:], uint64(headerNumber))
-
-			err := storage.Add(
-				keys.Header{
-					Bytes: bytes[:],
-				},
-				0,
-				keys.Message{},
-			)
-			if err != nil {
-				t.Fatalf("Add(%d): expected no error but got %+v", headerNumber, err)
-			}
-		}
-
-		if len(storage) != defaultSkippedKeysStorageHeaderKeysLenToClear {
-			t.Fatal("Add(): early clear")
-		}
+	for headerNumber := range defaultSkippedKeysStorageHeaderKeysLenToClear {
+		var bytes [sizes.Uint64]byte
+		binary.LittleEndian.PutUint64(bytes[:], uint64(headerNumber))
 
 		err := storage.Add(
 			keys.Header{
-				Bytes: []byte{1, 2, 3},
+				Bytes: bytes[:],
 			},
 			0,
 			keys.Message{},
 		)
 		if err != nil {
-			t.Fatalf("Add(1, 2, 3): expected no error but got %+v", err)
+			t.Fatalf("Add(%d): expected no error but got %+v", headerNumber, err)
 		}
+	}
 
-		if len(storage) != 1 {
-			t.Fatalf("Add(): expected clear but length is %d", len(storage))
+	if len(storage) != defaultSkippedKeysStorageHeaderKeysLenToClear {
+		t.Fatal("Add(): early clear")
+	}
+
+	err := storage.Add(
+		keys.Header{
+			Bytes: []byte{1, 2, 3},
+		},
+		0,
+		keys.Message{},
+	)
+	if err != nil {
+		t.Fatalf("Add(1, 2, 3): expected no error but got %+v", err)
+	}
+
+	if len(storage) != 1 {
+		t.Fatalf("Add(): expected clear but length is %d", len(storage))
+	}
+}
+
+func TestDefaultSkippedKeysStorageAddTooManyMessageKeys(t *testing.T) {
+	t.Parallel()
+
+	storage := newDefaultSkippedKeysStorage()
+
+	for messageNumber := range defaultSkippedKeysStorageMessageKeysLenLimit {
+		err := storage.Add(keys.Header{}, uint64(messageNumber), keys.Message{})
+		if err != nil {
+			t.Fatalf("Add(%d): expected no error but got %+v", messageNumber, err)
 		}
-	})
+	}
 
-	t.Run("test too many message keys", func(t *testing.T) {
-		t.Parallel()
-
-		storage := newDefaultSkippedKeysStorage()
-
-		for messageNumber := range defaultSkippedKeysStorageMessageKeysLenLimit {
-			err := storage.Add(keys.Header{}, uint64(messageNumber), keys.Message{})
-			if err != nil {
-				t.Fatalf("Add(%d): expected no error but got %+v", messageNumber, err)
-			}
-		}
-
-		errString := fmt.Sprintf(
-			"too many message keys: %d >= %d",
+	err := storage.Add(
+		keys.Header{},
+		defaultSkippedKeysStorageMessageKeysLenLimit,
+		keys.Message{},
+	)
+	if !errors.Is(err, ErrTooManySkippedMessageKeys) {
+		t.Fatalf(
+			"Add(%d): expected error too many message keys error but got %+v",
 			defaultSkippedKeysStorageMessageKeysLenLimit,
-			defaultSkippedKeysStorageMessageKeysLenLimit,
+			err,
 		)
-
-		err := storage.Add(
-			keys.Header{},
-			defaultSkippedKeysStorageMessageKeysLenLimit,
-			keys.Message{},
-		)
-		if err == nil || err.Error() != errString {
-			t.Fatalf(
-				"Add(%d): expected error %q but got %+v",
-				defaultSkippedKeysStorageMessageKeysLenLimit,
-				errString,
-				err,
-			)
-		}
-	})
+	}
 }
 
 func TestDefaultSkippedKeysStorageDelete(t *testing.T) {

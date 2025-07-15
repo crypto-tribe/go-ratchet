@@ -104,12 +104,17 @@ linters:
   exclusions:
     rules:
       - path: _test\.go
+        linters:
+          - funlen
+          - gosec
+      - path: _test\.go
         text: "create a named constant for it"
         linters:
           - revive
       - path: _test\.go
+        text: "function-length"
         linters:
-          - gosec
+          - revive
       - path: \.go
         text: "appears, at least,"
         linters:

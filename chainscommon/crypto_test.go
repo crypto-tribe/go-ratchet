@@ -32,8 +32,6 @@ func TestDeriveMessageCipherKeyAndNonce(t *testing.T) {
 	t.Parallel()
 
 	for _, test := range deriveMessageCipherKeyAndNonceTests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 

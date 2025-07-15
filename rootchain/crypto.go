@@ -14,9 +14,7 @@ const (
 	defaultCryptoKDFOutputLen = 3 * 32
 )
 
-var (
-	defaultCryptoKDFInfo = []byte("advance root chain")
-)
+var defaultCryptoKDFInfo = []byte("advance root chain")
 
 // Crypto is the crypto interface for the root chain.
 type Crypto interface {
@@ -59,7 +57,7 @@ func (defaultCrypto) AdvanceChain(
 	}
 
 	if newHashErr != nil {
-		return keys.Root{}, keys.Master{}, keys.Header{}, errors.Join(ErrNewHasher, err)
+		return keys.Root{}, keys.Master{}, keys.Header{}, errors.Join(ErrNewHasher, newHashErr)
 	}
 
 	newRootKey := keys.Root{

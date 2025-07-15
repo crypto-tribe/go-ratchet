@@ -2,9 +2,7 @@ package receivingchain
 
 import (
 	"errors"
-	"fmt"
 
-	"github.com/lyreware/go-ratchet/errlist"
 	"github.com/lyreware/go-ratchet/header"
 	"github.com/lyreware/go-ratchet/keys"
 	"github.com/lyreware/go-utils/slices"
@@ -42,7 +40,7 @@ func New(
 
 	chain.cfg, err = newConfig(options...)
 	if err != nil {
-		return Chain{}, fmt.Errorf("new config: %w", err)
+		return Chain{}, errors.Join(ErrNewConfig, err)
 	}
 
 	return chain, nil
@@ -71,38 +69,23 @@ func (ch *Chain) Decrypt(
 		return decryptedData, nil
 	}
 
-	skippedKeysErr = fmt.Errorf("decrypt with skipped keys: %w", skippedKeysErr)
+	skippedKeysErr = errors.Join(ErrDecryptWithSkippedKeys, skippedKeysErr)
 
 	err := ch.handleEncryptedHeader(encryptedHeader, ratchet)
 	if err != nil {
-		err = errors.Join(
-			skippedKeysErr,
-			fmt.Errorf("handle encrypted header: %w", err),
-		)
-
-		return nil, err
+		return nil, errors.Join(skippedKeysErr, ErrHandleEncryptedHeader, err)
 	}
 
 	messageKey, err := ch.advance()
 	if err != nil {
-		err = errors.Join(
-			skippedKeysErr,
-			fmt.Errorf("advance chain: %w", err),
-		)
-
-		return nil, err
+		return nil, errors.Join(skippedKeysErr, ErrAdvanceChain, err)
 	}
 
 	auth = slices.ConcatBytes(encryptedHeader, auth)
 
 	decryptedData, err = ch.cfg.crypto.DecryptMessage(messageKey, encryptedData, auth)
 	if err != nil {
-		err = errors.Join(
-			skippedKeysErr,
-			fmt.Errorf("%w: decrypt message: %w", errlist.ErrCrypto, err),
-		)
-
-		return nil, err
+		return nil, errors.Join(skippedKeysErr, ErrDecryptMessage, err)
 	}
 
 	// Note that here it is ok to ignore an error when decrypting with skipped keys
@@ -120,12 +103,12 @@ func (ch *Chain) Upgrade(masterKey keys.Master, nextHeaderKey keys.Header) {
 
 func (ch *Chain) advance() (keys.Message, error) {
 	if ch.masterKey == nil {
-		return keys.Message{}, fmt.Errorf("%w: master key is nil", errlist.ErrInvalidValue)
+		return keys.Message{}, ErrMasterKeyIsNil
 	}
 
 	newMasterKey, messageKey, err := ch.cfg.crypto.AdvanceChain(*ch.masterKey)
 	if err != nil {
-		return keys.Message{}, fmt.Errorf("%w: advance via crypto: %w", errlist.ErrCrypto, err)
+		return keys.Message{}, errors.Join(ErrCryptoAdvanceChain, err)
 	}
 
 	ch.masterKey = &newMasterKey
@@ -149,21 +132,12 @@ func (ch *Chain) decryptHeaderWithCurrentOrNextKey(
 			return decryptedHeader, false, nil
 		}
 
-		currentKeyErr = fmt.Errorf(
-			"%w: decrypt header with current key: %w",
-			errlist.ErrCrypto,
-			currentKeyErr,
-		)
+		currentKeyErr = errors.Join(ErrDecryptHeaderWithCurrentKey, currentKeyErr)
 	}
 
 	decryptedHeader, err = ch.cfg.crypto.DecryptHeader(ch.nextHeaderKey, encryptedHeader)
 	if err != nil {
-		err = errors.Join(
-			currentKeyErr,
-			fmt.Errorf("%w: decrypt header with next header key: %w", errlist.ErrCrypto, err),
-		)
-
-		return header.Header{}, false, err
+		return header.Header{}, false, errors.Join(currentKeyErr, ErrDecryptHeaderWithNextKey, err)
 	}
 
 	// Note that here it is ok to ignore an error when decrypting with the current
@@ -176,7 +150,7 @@ func (ch *Chain) decryptWithSkippedKeys(
 ) ([]byte, error) {
 	iter, err := ch.cfg.skippedKeysStorage.GetIter()
 	if err != nil {
-		return nil, fmt.Errorf("%w: get iter: %w", errlist.ErrSkippedKeysStorage, err)
+		return nil, errors.Join(ErrGetSkippedKeysStorageIter, err)
 	}
 
 	for headerKey, messageNumberKeys := range iter {
@@ -192,76 +166,61 @@ func (ch *Chain) decryptWithSkippedKeys(
 
 			decryptedData, err := ch.cfg.crypto.DecryptMessage(messageKey, encryptedData, auth)
 			if err != nil {
-				return nil, fmt.Errorf("%w: decrypt message: %w", errlist.ErrCrypto, err)
+				return nil, errors.Join(ErrDecryptMessage, err)
 			}
 
 			err = ch.cfg.skippedKeysStorage.Delete(headerKey, messageNumber)
 			if err != nil {
-				return nil, fmt.Errorf("%w: delete: %w", errlist.ErrSkippedKeysStorage, err)
+				return nil, errors.Join(ErrDeleteSkippedKeys, err)
 			}
 
 			return decryptedData, nil
 		}
 	}
 
-	return nil, errors.New("no keys to decrypt header and data")
+	return nil, ErrSkippedKeysNotFound
 }
 
 func (ch *Chain) handleEncryptedHeader(encryptedHeader []byte, ratchet RatchetCallback) error {
 	decryptedHeader, needRatchet, err := ch.decryptHeaderWithCurrentOrNextKey(encryptedHeader)
 	if err != nil {
-		return fmt.Errorf("decrypt header: %w", err)
+		return errors.Join(ErrDecryptHeaderWithCurrentOrNextKey, err)
 	}
 
 	if needRatchet {
 		err = ch.skipKeys(decryptedHeader.PreviousSendingChainMessagesCount)
 		if err != nil {
-			return fmt.Errorf(
-				"skip %d keys: %w",
-				decryptedHeader.PreviousSendingChainMessagesCount,
-				err,
-			)
+			return errors.Join(ErrSkipPreviousChainKeys, err)
 		}
 
 		err = ratchet(decryptedHeader.PublicKey)
 		if err != nil {
-			return fmt.Errorf("ratchet: %w", err)
+			return errors.Join(ErrRatchet, err)
 		}
 	}
 
 	err = ch.skipKeys(decryptedHeader.MessageNumber)
 	if err != nil {
-		return fmt.Errorf(
-			"skip %d message keys in upgraded chain: %w",
-			decryptedHeader.MessageNumber,
-			err,
-		)
+		return errors.Join(ErrSkipCurrentChainKeys, err)
 	}
 
 	return nil
 }
 
 func (ch *Chain) skipKeys(untilMessageNumber uint64) error {
-	if untilMessageNumber < ch.nextMessageNumber {
-		return fmt.Errorf(
-			"message number is small for the current chain, next message number is %d",
-			ch.nextMessageNumber,
-		)
-	}
-
 	for messageNumber := ch.nextMessageNumber; messageNumber < untilMessageNumber; messageNumber++ {
 		messageKey, err := ch.advance()
 		if err != nil {
-			return fmt.Errorf("advance chain: %w", err)
+			return errors.Join(ErrAdvanceChain, err)
 		}
 
 		if ch.headerKey == nil {
-			return fmt.Errorf("%w: header key is nil", errlist.ErrInvalidValue)
+			return ErrHeaderKeyIsNil
 		}
 
 		err = ch.cfg.skippedKeysStorage.Add(*ch.headerKey, messageNumber, messageKey)
 		if err != nil {
-			return fmt.Errorf("%w: add: %w", errlist.ErrSkippedKeysStorage, err)
+			return errors.Join(ErrAddSkippedKey, err)
 		}
 	}
 

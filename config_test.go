@@ -5,13 +5,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/lyreware/go-ratchet/errlist"
 	"github.com/lyreware/go-ratchet/header"
 	"github.com/lyreware/go-ratchet/keys"
 	"github.com/lyreware/go-ratchet/receivingchain"
 	"github.com/lyreware/go-ratchet/rootchain"
 	"github.com/lyreware/go-ratchet/sendingchain"
-	"github.com/lyreware/go-utils/check"
 )
 
 type testCrypto struct{}
@@ -61,74 +59,91 @@ func (testSendingChainCrypto) EncryptMessage(_ keys.Message, _, _ []byte) ([]byt
 	return nil, nil
 }
 
-func TestNewConfig(t *testing.T) {
-	t.Parallel()
-
-	t.Run("default config", func(t *testing.T) {
-		t.Parallel()
-
-		cfg, err := newConfig()
-		if err != nil {
-			t.Fatalf("newConfig() expected no error but got %v", err)
-		}
-
-		if check.IsNil(cfg.crypto) {
-			t.Fatal("newConfig() sets no default value for crypto")
-		}
-	})
-
-	t.Run("chain options", func(t *testing.T) {
-		t.Parallel()
-
-		cfg, err := newConfig(
+var newConfigTests = []struct {
+	name                        string
+	options                     []Option
+	errCategories               []error
+	expectedCrypto              Crypto
+	expectedReceivingOptionsLen int
+	expectedRootOptionsLen      int
+	expectedSendingOptionsLen   int
+}{
+	{
+		"default",
+		nil,
+		nil,
+		defaultCrypto{},
+		0,
+		0,
+		0,
+	},
+	{
+		"all options success",
+		[]Option{
+			WithCrypto(testCrypto{}),
 			WithReceivingChainOptions(receivingchain.WithCrypto(testReceivingChainCrypto{})),
 			WithRootChainOptions(rootchain.WithCrypto(testRootChainCrypto{})),
 			WithSendingChainOptions(sendingchain.WithCrypto(testSendingChainCrypto{})),
-		)
-		if err != nil {
-			t.Fatalf("newConfig() with options expected no error but got %v", err)
-		}
+		},
+		nil,
+		testCrypto{},
+		1,
+		1,
+		1,
+	},
+	{
+		"nil crypto",
+		[]Option{
+			WithCrypto(nil),
+		},
+		[]error{
+			ErrApplyOptions,
+			ErrCryptoIsNil,
+		},
+		nil,
+		0,
+		0,
+		0,
+	},
+}
 
-		if len(cfg.receivingOptions) != 1 {
-			t.Fatal("newConfig() with receiving chain options did not set passed crypto")
-		}
+func TestNewConfig(t *testing.T) {
+	t.Parallel()
 
-		if len(cfg.rootOptions) != 1 {
-			t.Fatal("newConfig() with root chain options did not set passed crypto")
-		}
+	for _, test := range newConfigTests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 
-		if len(cfg.sendingOptions) != 1 {
-			t.Fatal("newConfig() with sending chain options did not set passed crypto")
-		}
-	})
+			cfg, err := newConfig(test.options...)
+			if err != nil && len(test.errCategories) == 0 {
+				t.Fatalf("newConfig() expected no error but got %v", err)
+			}
 
-	t.Run("crypto option success", func(t *testing.T) {
-		t.Parallel()
+			for _, errCategory := range test.errCategories {
+				if !errors.Is(err, errCategory) {
+					t.Fatalf("newConfig() expected error %v but got %v", errCategory, err)
+				}
+			}
 
-		cfg, err := newConfig(WithCrypto(testCrypto{}))
-		if err != nil {
-			t.Fatalf("newConfig() with options expected no error but got %v", err)
-		}
+			if err != nil {
+				return
+			}
 
-		if reflect.TypeOf(cfg.crypto) != reflect.TypeOf(testCrypto{}) {
-			t.Fatal("WithCrypto() option did not set passed crypto")
-		}
-	})
+			if reflect.TypeOf(cfg.crypto) != reflect.TypeOf(test.expectedCrypto) {
+				t.Fatal("WithCrypto() option did not set passed crypto")
+			}
 
-	t.Run("crypto option error", func(t *testing.T) {
-		t.Parallel()
+			if len(cfg.receivingOptions) != test.expectedReceivingOptionsLen {
+				t.Fatal("WithReceivingChainOptions() option did not set passed options")
+			}
 
-		_, err := newConfig(WithCrypto(nil))
-		if err == nil || err.Error() != "option: invalid value: crypto is nil" {
-			t.Fatalf("WithCrypto(nil) expected error but got %v", err)
-		}
+			if len(cfg.rootOptions) != test.expectedRootOptionsLen {
+				t.Fatal("WithRootChainOptions() option did not set passed options")
+			}
 
-		if !errors.Is(err, errlist.ErrOption) {
-			t.Fatalf("WithCrypto(nil) error is not option error but %v", err)
-		}
-
-		if !errors.Is(err, errlist.ErrInvalidValue) {
-			t.Fatalf("WithCrypto(nil) error is not invalid value error but %v", err)
-		}
-	})
+			if len(cfg.sendingOptions) != test.expectedSendingOptionsLen {
+				t.Fatal("WithSendingChainOptions() option did not set passed options")
+			}
+		})
+	}
 }

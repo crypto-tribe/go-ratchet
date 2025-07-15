@@ -38,7 +38,7 @@ func (ch *Chain) Advance(sharedKey keys.Shared) (keys.Master, keys.Header, error
 
 	ch.rootKey, masterKey, nextHeaderKey, err = ch.cfg.crypto.AdvanceChain(ch.rootKey, sharedKey)
 	if err != nil {
-		return keys.Master{}, keys.Header{}, errors.Join(ErrCryptoAdvance, err)
+		return keys.Master{}, keys.Header{}, errors.Join(ErrAdvanceChain, err)
 	}
 
 	return masterKey, nextHeaderKey, nil

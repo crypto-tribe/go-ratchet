@@ -1,6 +1,7 @@
 package sendingchain
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 
@@ -28,8 +29,6 @@ func TestDefaultCryptoAdvanceChain(t *testing.T) {
 	crypto := newDefaultCrypto()
 
 	for _, test := range defaultCryptoAdvanceChainTests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -107,8 +106,6 @@ func TestDefaultCryptoEncryptHeader(t *testing.T) {
 	crypto := newDefaultCrypto()
 
 	for _, test := range defaultCryptoEncryptHeaderTests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -124,7 +121,13 @@ func TestDefaultCryptoEncryptHeader(t *testing.T) {
 
 			for _, errCategory := range test.errCategories {
 				if !errors.Is(err, errCategory) {
-					t.Fatalf("EncryptHeader(%+v, %+v): expected error %v but got %v", test.headerKey, test.header, errCategory, err)
+					t.Fatalf(
+						"EncryptHeader(%+v, %+v): expected error %v but got %v",
+						test.headerKey,
+						test.header,
+						errCategory,
+						err,
+					)
 				}
 			}
 
@@ -186,8 +189,6 @@ func TestDefaultCryptoEncryptMessage(t *testing.T) {
 	crypto := newDefaultCrypto()
 
 	for _, test := range defaultCryptoEncryptMessageTests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
