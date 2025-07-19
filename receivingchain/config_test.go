@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/lyreware/go-ratchet/header"
-	"github.com/lyreware/go-ratchet/keys"
+	"github.com/crypto-tribe/go-ratchet/header"
+	"github.com/crypto-tribe/go-ratchet/keys"
 )
 
 type testCrypto struct{}

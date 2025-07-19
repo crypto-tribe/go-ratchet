@@ -5,11 +5,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/lyreware/go-ratchet/header"
-	"github.com/lyreware/go-ratchet/keys"
-	"github.com/lyreware/go-ratchet/receivingchain"
-	"github.com/lyreware/go-ratchet/rootchain"
-	"github.com/lyreware/go-ratchet/sendingchain"
+	"github.com/crypto-tribe/go-ratchet/header"
+	"github.com/crypto-tribe/go-ratchet/keys"
+	"github.com/crypto-tribe/go-ratchet/receivingchain"
+	"github.com/crypto-tribe/go-ratchet/rootchain"
+	"github.com/crypto-tribe/go-ratchet/sendingchain"
 )
 
 type testCrypto struct{}

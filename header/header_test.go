@@ -6,7 +6,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/lyreware/go-ratchet/keys"
+	"github.com/crypto-tribe/go-ratchet/keys"
 )
 
 var successEncodeAndDecodeTests = []struct {

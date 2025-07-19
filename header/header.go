@@ -3,9 +3,9 @@ package header
 import (
 	"encoding/binary"
 
-	"github.com/lyreware/go-ratchet/keys"
-	"github.com/lyreware/go-utils/sizes"
-	"github.com/lyreware/go-utils/slices"
+	"github.com/crypto-tribe/go-ratchet/keys"
+	"github.com/crypto-tribe/go-utils/sizes"
+	"github.com/crypto-tribe/go-utils/slices"
 )
 
 // Header is the message header.

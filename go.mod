@@ -1,9 +1,9 @@
-module github.com/lyreware/go-ratchet
+module github.com/crypto-tribe/go-ratchet
 
 go 1.23.4
 
 require (
-	github.com/lyreware/go-utils v0.2.3
+	github.com/crypto-tribe/go-utils v0.2.4
 	golang.org/x/crypto v0.36.0
 )
 

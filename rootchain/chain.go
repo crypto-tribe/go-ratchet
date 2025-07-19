@@ -3,7 +3,7 @@ package rootchain
 import (
 	"errors"
 
-	"github.com/lyreware/go-ratchet/keys"
+	"github.com/crypto-tribe/go-ratchet/keys"
 )
 
 // Chain is the ratchet root chain.

@@ -6,10 +6,10 @@ import (
 	"errors"
 	"hash"
 
-	"github.com/lyreware/go-ratchet/chainscommon"
-	"github.com/lyreware/go-ratchet/header"
-	"github.com/lyreware/go-ratchet/keys"
-	"github.com/lyreware/go-utils/slices"
+	"github.com/crypto-tribe/go-ratchet/chainscommon"
+	"github.com/crypto-tribe/go-ratchet/header"
+	"github.com/crypto-tribe/go-ratchet/keys"
+	"github.com/crypto-tribe/go-utils/slices"
 	"golang.org/x/crypto/blake2b"
 	cipher "golang.org/x/crypto/chacha20poly1305"
 )

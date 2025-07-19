@@ -5,7 +5,7 @@ import (
 	"crypto/rand"
 	"errors"
 
-	"github.com/lyreware/go-ratchet/keys"
+	"github.com/crypto-tribe/go-ratchet/keys"
 )
 
 // Crypto is the interface for rachet crypto.

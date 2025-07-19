@@ -1,7 +1,7 @@
 package keys
 
 import (
-	"github.com/lyreware/go-utils/slices"
+	"github.com/crypto-tribe/go-utils/slices"
 )
 
 // Root is the key of ratchet root chain.

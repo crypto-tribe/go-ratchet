@@ -1,7 +1,7 @@
 package receivingchain
 
 import (
-	"github.com/lyreware/go-ratchet/keys"
+	"github.com/crypto-tribe/go-ratchet/keys"
 )
 
 const (

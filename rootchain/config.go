@@ -3,7 +3,7 @@ package rootchain
 import (
 	"errors"
 
-	"github.com/lyreware/go-utils/check"
+	"github.com/crypto-tribe/go-utils/check"
 )
 
 type config struct {

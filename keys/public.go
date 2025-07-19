@@ -1,7 +1,7 @@
 package keys
 
 import (
-	"github.com/lyreware/go-utils/slices"
+	"github.com/crypto-tribe/go-utils/slices"
 )
 
 // Public is participant's public key.

@@ -3,11 +3,11 @@ package ratchet
 import (
 	"errors"
 
-	"github.com/lyreware/go-ratchet/keys"
-	"github.com/lyreware/go-ratchet/receivingchain"
-	"github.com/lyreware/go-ratchet/rootchain"
-	"github.com/lyreware/go-ratchet/sendingchain"
-	"github.com/lyreware/go-utils/atomic"
+	"github.com/crypto-tribe/go-ratchet/keys"
+	"github.com/crypto-tribe/go-ratchet/receivingchain"
+	"github.com/crypto-tribe/go-ratchet/rootchain"
+	"github.com/crypto-tribe/go-ratchet/sendingchain"
+	"github.com/crypto-tribe/go-utils/atomic"
 )
 
 // Ratchet is the participant of the conversation.
