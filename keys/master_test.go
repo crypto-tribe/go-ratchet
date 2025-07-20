@@ -9,7 +9,10 @@ var messageMasterCloneTests = []struct {
 	name string
 	key  Master
 }{
-	{"zero message master key", Master{}},
+	{
+		"zero message master key",
+		Master{},
+	},
 	{
 		"non-empty message master key",
 		Master{
@@ -41,9 +44,20 @@ var messageMasterClonePtrTests = []struct {
 	name string
 	key  *Master
 }{
-	{"nil ptr to message master key", nil},
-	{"ptr to zero message master key", &Master{}},
-	{"ptr to non-empty message master key", &Master{Bytes: []byte{1, 2, 3, 4, 5}}},
+	{
+		"nil ptr to message master key",
+		nil,
+	},
+	{
+		"ptr to zero message master key",
+		&Master{},
+	},
+	{
+		"ptr to non-empty message master key",
+		&Master{
+			Bytes: []byte{1, 2, 3, 4, 5},
+		},
+	},
 }
 
 func TestMasterClonePtr(t *testing.T) {

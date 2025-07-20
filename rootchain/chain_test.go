@@ -14,7 +14,12 @@ var newChainTests = []struct {
 	options       []Option
 	errCategories []error
 }{
-	{"zero root key and no options", keys.Root{}, nil, nil},
+	{
+		"zero root key and no options",
+		keys.Root{},
+		nil,
+		nil,
+	},
 	{
 		"non-empty root key and crypto option",
 		keys.Root{
@@ -75,7 +80,10 @@ var chainAdvanceTests = []struct {
 	name      string
 	sharedKey keys.Shared
 }{
-	{"zero key", keys.Shared{}},
+	{
+		"zero key",
+		keys.Shared{},
+	},
 	{
 		"non-empty key",
 		keys.Shared{
@@ -135,7 +143,10 @@ var chainCloneTests = []struct {
 	name    string
 	rootKey keys.Root
 }{
-	{"zero key", keys.Root{}},
+	{
+		"zero key",
+		keys.Root{},
+	},
 	{
 		"non-empty key",
 		keys.Root{

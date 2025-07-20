@@ -9,7 +9,10 @@ var privateCloneTests = []struct {
 	name string
 	key  Private
 }{
-	{"zero private key", Private{}},
+	{
+		"zero private key",
+		Private{},
+	},
 	{
 		"non-empty private key",
 		Private{

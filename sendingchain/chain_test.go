@@ -24,7 +24,11 @@ var newChainTests = []struct {
 	args          newChainTestArgs
 	errCategories []error
 }{
-	{"zero args and no options", newChainTestArgs{}, nil},
+	{
+		"zero args and no options",
+		newChainTestArgs{},
+		nil,
+	},
 	{
 		"non-empty args and crypto option",
 		newChainTestArgs{
@@ -151,7 +155,9 @@ var chainCloneTests = []struct {
 	previousChainMessagesCount uint64
 	options                    []Option
 }{
-	{name: "zero args"},
+	{
+		name: "zero args",
+	},
 	{
 		"non-empty args",
 		&keys.Master{
@@ -451,7 +457,11 @@ var chainPrepareHeaderTests = []struct {
 	args   chainPrepareHeaderTestArgs
 	header header.Header
 }{
-	{"zero args and header", chainPrepareHeaderTestArgs{}, header.Header{}},
+	{
+		"zero args and header",
+		chainPrepareHeaderTestArgs{},
+		header.Header{},
+	},
 	{
 		"full args and header",
 		chainPrepareHeaderTestArgs{

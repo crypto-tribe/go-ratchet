@@ -9,7 +9,10 @@ var headerCloneTests = []struct {
 	name string
 	key  Header
 }{
-	{"zero header key", Header{}},
+	{
+		"zero header key",
+		Header{},
+	},
 	{
 		"non-empty header key",
 		Header{
@@ -41,8 +44,14 @@ var headerClonePtrTests = []struct {
 	name string
 	key  *Header
 }{
-	{"nil ptr to header key", nil},
-	{"ptr to zero header key", &Header{}},
+	{
+		"nil ptr to header key",
+		nil,
+	},
+	{
+		"ptr to zero header key",
+		&Header{},
+	},
 	{
 		"ptr to non-empty header key",
 		&Header{

@@ -9,7 +9,10 @@ var publicCloneTests = []struct {
 	name string
 	key  Public
 }{
-	{"zero public key", Public{}},
+	{
+		"zero public key",
+		Public{},
+	},
 	{
 		"non-empty public key",
 		Public{
@@ -41,9 +44,20 @@ var publicClonePtrTests = []struct {
 	name string
 	key  *Public
 }{
-	{"nil ptr to public key", nil},
-	{"ptr to zero public key", &Public{}},
-	{"ptr to non-empty public key", &Public{Bytes: []byte{1, 2, 3, 4, 5}}},
+	{
+		"nil ptr to public key",
+		nil,
+	},
+	{
+		"ptr to zero public key",
+		&Public{},
+	},
+	{
+		"ptr to non-empty public key",
+		&Public{
+			Bytes: []byte{1, 2, 3, 4, 5},
+		},
+	},
 }
 
 func TestPublicClonePtr(t *testing.T) {

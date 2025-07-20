@@ -9,7 +9,10 @@ var rootCloneTests = []struct {
 	name string
 	key  Root
 }{
-	{"zero root key", Root{}},
+	{
+		"zero root key",
+		Root{},
+	},
 	{
 		"non-empty root key",
 		Root{

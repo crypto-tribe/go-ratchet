@@ -9,7 +9,10 @@ var messageCloneTests = []struct {
 	name string
 	key  Message
 }{
-	{"zero message key", Message{}},
+	{
+		"zero message key",
+		Message{},
+	},
 	{
 		"non-empty message key",
 		Message{
