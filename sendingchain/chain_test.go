@@ -156,7 +156,13 @@ var chainCloneTests = []struct {
 	options                    []Option
 }{
 	{
-		name: "zero args",
+		"zero args",
+		nil,
+		nil,
+		keys.Header{},
+		0,
+		0,
+		nil,
 	},
 	{
 		"non-empty args",
