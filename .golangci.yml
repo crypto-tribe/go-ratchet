@@ -216,6 +216,8 @@ linters:
         - shadow
 
     mnd:
+      ignored-numbers:
+        - 3
       ignored-functions:
         - args.Error
         - flag.Arg
@@ -249,7 +251,7 @@ linters:
       rules:
         - name: add-constant
           arguments:
-            - allow-ints: "0,2,32,64"
+            - allow-ints: "0,2,3,32,64"
         - name: cyclomatic
           arguments: [20]
         - name: cognitive-complexity

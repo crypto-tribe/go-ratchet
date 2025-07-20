@@ -35,7 +35,7 @@ func TestDeriveMessageCipherKeyAndNonce(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			cipherKey, cipherNonce, err := DeriveMessageCipherKeyAndNonce(test.messageKey)
+			key, nonce, err := DeriveMessageCipherKeyAndNonce(test.messageKey)
 			if err != nil {
 				t.Fatalf(
 					"DeriveMessageCipherKeyAndNonce(%+v): expected no error but got %v",
@@ -44,14 +44,14 @@ func TestDeriveMessageCipherKeyAndNonce(t *testing.T) {
 				)
 			}
 
-			if len(cipherKey) == 0 {
+			if len(key) == 0 {
 				t.Fatalf(
 					"DeriveMessageCipherKeyAndNonce(%+v): returned empty cipher key",
 					test.messageKey,
 				)
 			}
 
-			if len(cipherNonce) == 0 {
+			if len(nonce) == 0 {
 				t.Fatalf(
 					"DeriveMessageCipherKeyAndNonce(%+v): returned empty cipher nonce",
 					test.messageKey,

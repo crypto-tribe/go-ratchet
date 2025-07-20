@@ -11,13 +11,10 @@ import (
 	"golang.org/x/crypto/hkdf"
 )
 
-const (
-	messageCipherKDFOutputLen = cipher.KeySize + cipher.NonceSizeX
-)
-
 var (
-	messageCipherKDFSalt = make([]byte, messageCipherKDFOutputLen)
-	messageCipherKDFInfo = []byte("message cipher")
+	messageCipherKDFOutputLen = cipher.KeySize + cipher.NonceSizeX
+	messageCipherKDFSalt      = make([]byte, messageCipherKDFOutputLen)
+	messageCipherKDFInfo      = []byte("message cipher")
 )
 
 // DeriveMessageCipherKeyAndNonce derives a new cipher key and cipher nonce to encrypt a message.

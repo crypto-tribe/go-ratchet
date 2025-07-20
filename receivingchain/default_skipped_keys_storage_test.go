@@ -1,12 +1,10 @@
 package receivingchain
 
 import (
-	"encoding/binary"
 	"errors"
 	"testing"
 
 	"github.com/crypto-tribe/go-ratchet/keys"
-	"github.com/crypto-tribe/go-utils/sizes"
 )
 
 func TestDefaultSkippedKeysStorageAddClear(t *testing.T) {
@@ -14,13 +12,10 @@ func TestDefaultSkippedKeysStorageAddClear(t *testing.T) {
 
 	storage := newDefaultSkippedKeysStorage()
 
-	for headerNumber := range defaultSkippedKeysStorageHeaderKeysLenToClear {
-		var bytes [sizes.Uint64]byte
-		binary.LittleEndian.PutUint64(bytes[:], uint64(headerNumber))
-
+	for headerNumber := range defaultSkippedKeysStorageHeaderKeysCountToClear {
 		err := storage.Add(
 			keys.Header{
-				Bytes: bytes[:],
+				Bytes: make([]byte, headerNumber),
 			},
 			0,
 			keys.Message{},
@@ -30,7 +25,7 @@ func TestDefaultSkippedKeysStorageAddClear(t *testing.T) {
 		}
 	}
 
-	if len(storage) != defaultSkippedKeysStorageHeaderKeysLenToClear {
+	if storage.getHeaderKeysCount() != defaultSkippedKeysStorageHeaderKeysCountToClear {
 		t.Fatal("Add(): early clear")
 	}
 
@@ -45,8 +40,8 @@ func TestDefaultSkippedKeysStorageAddClear(t *testing.T) {
 		t.Fatalf("Add(1, 2, 3): expected no error but got %+v", err)
 	}
 
-	if len(storage) != 1 {
-		t.Fatalf("Add(): expected clear but length is %d", len(storage))
+	if storage.getHeaderKeysCount() != 1 {
+		t.Fatalf("Add(): expected clear but length is %d", storage.getHeaderKeysCount())
 	}
 }
 
@@ -55,7 +50,7 @@ func TestDefaultSkippedKeysStorageAddTooManyMessageKeys(t *testing.T) {
 
 	storage := newDefaultSkippedKeysStorage()
 
-	for messageNumber := range defaultSkippedKeysStorageMessageKeysLenLimit {
+	for messageNumber := range defaultSkippedKeysStorageMessageKeysCountLimit {
 		err := storage.Add(keys.Header{}, uint64(messageNumber), keys.Message{})
 		if err != nil {
 			t.Fatalf("Add(%d): expected no error but got %+v", messageNumber, err)
@@ -64,13 +59,13 @@ func TestDefaultSkippedKeysStorageAddTooManyMessageKeys(t *testing.T) {
 
 	err := storage.Add(
 		keys.Header{},
-		defaultSkippedKeysStorageMessageKeysLenLimit,
+		defaultSkippedKeysStorageMessageKeysCountLimit,
 		keys.Message{},
 	)
 	if !errors.Is(err, ErrTooManySkippedMessageKeys) {
 		t.Fatalf(
 			"Add(%d): expected error too many message keys error but got %+v",
-			defaultSkippedKeysStorageMessageKeysLenLimit,
+			defaultSkippedKeysStorageMessageKeysCountLimit,
 			err,
 		)
 	}
@@ -89,10 +84,8 @@ func TestDefaultSkippedKeysStorageDelete(t *testing.T) {
 		t.Fatalf("Add(): expected no error but got %+v", err)
 	}
 
-	storageKey := storage.convertToKey(headerKey)
-
-	if len(storage) != 1 || len(storage[storageKey]) != 1 {
-		t.Fatalf("Add(): expected len 1 but got %d", len(storage))
+	if storage.getHeaderKeysCount() != 1 || storage.getMessageKeysCount(headerKey) != 1 {
+		t.Fatalf("Add(): expected len 1 but got %d", storage.getHeaderKeysCount())
 	}
 
 	err = storage.Delete(keys.Header{}, 100)
@@ -110,11 +103,11 @@ func TestDefaultSkippedKeysStorageDelete(t *testing.T) {
 		t.Fatalf("Delete(): expected no error but got %+v", err)
 	}
 
-	if len(storage) != 1 || len(storage[storageKey]) != 1 {
+	if storage.getHeaderKeysCount() != 1 || storage.getMessageKeysCount(headerKey) != 1 {
 		t.Fatalf(
 			"Delete(): expected no delete but len is %d:%d",
-			len(storage),
-			len(storage[storageKey]),
+			storage.getHeaderKeysCount(),
+			storage.getMessageKeysCount(headerKey),
 		)
 	}
 
@@ -123,11 +116,11 @@ func TestDefaultSkippedKeysStorageDelete(t *testing.T) {
 		t.Fatalf("Delete(): expected no error but got %+v", err)
 	}
 
-	if len(storage) != 1 || len(storage[storageKey]) != 0 {
+	if storage.getHeaderKeysCount() != 1 || storage.getMessageKeysCount(headerKey) != 0 {
 		t.Fatalf(
 			"Delete(): expected delete but len is %d:%d",
-			len(storage),
-			len(storage[storageKey]),
+			storage.getHeaderKeysCount(),
+			storage.getMessageKeysCount(headerKey),
 		)
 	}
 }
@@ -136,13 +129,13 @@ func TestDefaultSkippedKeysStorageGetIter(t *testing.T) {
 	t.Parallel()
 
 	storage := newDefaultSkippedKeysStorage()
-	iters := make(map[byte]map[uint64]byte, defaultSkippedKeysStorageHeaderKeysLenToClear)
+	iters := make(map[byte]map[uint64]byte, defaultSkippedKeysStorageHeaderKeysCountToClear)
 
-	for headerKeyByteInt := range defaultSkippedKeysStorageHeaderKeysLenToClear / 2 {
+	for headerKeyByteInt := range defaultSkippedKeysStorageHeaderKeysCountToClear / 2 {
 		headerKeyByte := byte(headerKeyByteInt)
 		headerKey := keys.Header{Bytes: []byte{headerKeyByte}}
 
-		for messageNumber := range defaultSkippedKeysStorageMessageKeysLenLimit {
+		for messageNumber := range defaultSkippedKeysStorageMessageKeysCountLimit {
 			if messageNumber%2 == 1 {
 				continue
 			}
@@ -163,7 +156,7 @@ func TestDefaultSkippedKeysStorageGetIter(t *testing.T) {
 			if _, exists := iters[headerKeyByte]; !exists {
 				iters[headerKeyByte] = make(
 					map[uint64]byte,
-					defaultSkippedKeysStorageMessageKeysLenLimit/2,
+					defaultSkippedKeysStorageMessageKeysCountLimit/2,
 				)
 			}
 

@@ -14,7 +14,10 @@ var defaultCryptoAdvanceChainTests = []struct {
 	name      string
 	masterKey keys.Master
 }{
-	{"zero message master key", keys.Master{}},
+	{
+		"zero message master key",
+		keys.Master{},
+	},
 	{
 		"non-empty message master key",
 		keys.Master{
@@ -152,7 +155,12 @@ var defaultCryptoEncryptMessageTests = []struct {
 	message    []byte
 	auth       []byte
 }{
-	{"zero data", keys.Message{}, nil, nil},
+	{
+		"zero data",
+		keys.Message{},
+		nil,
+		nil,
+	},
 	{
 		"zero message key, without auth",
 		keys.Message{},

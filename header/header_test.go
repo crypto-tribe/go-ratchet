@@ -9,7 +9,7 @@ import (
 	"github.com/crypto-tribe/go-ratchet/keys"
 )
 
-var successEncodeAndDecodeTests = []struct {
+var encodeAndDecodeTests = []struct {
 	name   string
 	header Header
 	bytes  []byte
@@ -39,10 +39,10 @@ var successEncodeAndDecodeTests = []struct {
 	},
 }
 
-func TestSuccessEncodeAndDecode(t *testing.T) {
+func TestEncodeAndDecode(t *testing.T) {
 	t.Parallel()
 
-	for _, test := range successEncodeAndDecodeTests {
+	for _, test := range encodeAndDecodeTests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
