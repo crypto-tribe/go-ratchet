@@ -44,6 +44,14 @@ func TestDefaultCryptoAdvanceChain(t *testing.T) {
 				t.Fatalf("AdvanceChain(%+v): expected different message master key", test.masterKey)
 			}
 
+			if reflect.DeepEqual(masterKey, messageKey) {
+				t.Fatalf(
+					"AdvanceChain(%+v): expected different keys returned, but got %+v",
+					test.masterKey,
+					masterKey,
+				)
+			}
+
 			if len(masterKey.Bytes) == 0 {
 				t.Fatalf("AdvanceChain(%+v): returned empty message master key", test.masterKey)
 			}
