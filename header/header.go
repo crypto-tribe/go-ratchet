@@ -3,9 +3,9 @@ package header
 import (
 	"encoding/binary"
 
-	"github.com/crypto-tribe/go-ratchet/keys"
-	"github.com/crypto-tribe/go-utils/sizes"
-	"github.com/crypto-tribe/go-utils/slices"
+	"github.com/platform-source/aegis/keys"
+	"github.com/platform-source/tools/sizes"
+	"github.com/platform-source/tools/slices"
 )
 
 // Header is the message header.

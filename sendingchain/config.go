@@ -3,7 +3,7 @@ package sendingchain
 import (
 	"errors"
 
-	"github.com/crypto-tribe/go-utils/check"
+	"github.com/platform-source/tools/check"
 )
 
 type config struct {

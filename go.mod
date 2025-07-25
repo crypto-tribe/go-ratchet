@@ -1,9 +1,9 @@
-module github.com/crypto-tribe/go-ratchet
+module github.com/platform-source/aegis
 
 go 1.23.4
 
 require (
-	github.com/crypto-tribe/go-utils v0.2.4
+	github.com/platform-source/tools v0.2.5
 	golang.org/x/crypto v0.36.0
 )
 

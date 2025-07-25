@@ -1,5 +1,5 @@
-github.com/crypto-tribe/go-utils v0.2.4 h1:s7GqBF9zOLLDWFI6tNIu4nev9Mdf9cUA+invQHOzc9o=
-github.com/crypto-tribe/go-utils v0.2.4/go.mod h1:+fTai23FBzT+c56CoGQd6EVLE7bSD/gGvgvrvXUCEZQ=
+github.com/platform-source/tools v0.2.5 h1:XZUkalxzjtoxORuwE1hOpSx2WQ4OQMe4PBVLxkwh2Sw=
+github.com/platform-source/tools v0.2.5/go.mod h1:n/RMnBzGuwTtvQ5WEYzHEt2xcqvxQvlVTDBWI7UIwuY=
 golang.org/x/crypto v0.36.0 h1:AnAEvhDddvBdpY+uR+MyHmuZzzNqXSe/GvuDeob5L34=
 golang.org/x/crypto v0.36.0/go.mod h1:Y4J0ReaxCR1IMaabaSMugxJES1EpwhBHhv2bDHklZvc=
 golang.org/x/sys v0.31.0 h1:ioabZlmFYtWhL+TRYpcnNlLwhyxaM9kWTDEmfnprqik=

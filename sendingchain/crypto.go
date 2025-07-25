@@ -1,8 +1,8 @@
 package sendingchain
 
 import (
-	"github.com/crypto-tribe/go-ratchet/header"
-	"github.com/crypto-tribe/go-ratchet/keys"
+	"github.com/platform-source/aegis/header"
+	"github.com/platform-source/aegis/keys"
 )
 
 // Crypto interface for sending chain.

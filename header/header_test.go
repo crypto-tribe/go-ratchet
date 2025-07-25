@@ -6,7 +6,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/crypto-tribe/go-ratchet/keys"
+	"github.com/platform-source/aegis/keys"
 )
 
 var encodeAndDecodeTests = []struct {

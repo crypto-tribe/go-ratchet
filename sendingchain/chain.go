@@ -3,10 +3,10 @@ package sendingchain
 import (
 	"errors"
 
-	"github.com/crypto-tribe/go-ratchet/header"
-	"github.com/crypto-tribe/go-ratchet/keys"
-	"github.com/crypto-tribe/go-utils/convert"
-	"github.com/crypto-tribe/go-utils/slices"
+	"github.com/platform-source/aegis/header"
+	"github.com/platform-source/aegis/keys"
+	"github.com/platform-source/tools/convert"
+	"github.com/platform-source/tools/slices"
 )
 
 // Chain is the ratchet sending chain.

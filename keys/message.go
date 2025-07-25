@@ -1,7 +1,7 @@
 package keys
 
 import (
-	"github.com/crypto-tribe/go-utils/slices"
+	"github.com/platform-source/tools/slices"
 )
 
 // Message is the key to encrypt or decrypt messages.

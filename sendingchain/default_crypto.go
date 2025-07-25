@@ -6,10 +6,10 @@ import (
 	"errors"
 	"hash"
 
-	"github.com/crypto-tribe/go-ratchet/chainscommon"
-	"github.com/crypto-tribe/go-ratchet/header"
-	"github.com/crypto-tribe/go-ratchet/keys"
-	"github.com/crypto-tribe/go-utils/slices"
+	"github.com/platform-source/aegis/chainscommon"
+	"github.com/platform-source/aegis/header"
+	"github.com/platform-source/aegis/keys"
+	"github.com/platform-source/tools/slices"
 	"golang.org/x/crypto/blake2b"
 	cipher "golang.org/x/crypto/chacha20poly1305"
 )

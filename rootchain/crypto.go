@@ -1,7 +1,7 @@
 package rootchain
 
 import (
-	"github.com/crypto-tribe/go-ratchet/keys"
+	"github.com/platform-source/aegis/keys"
 )
 
 // Crypto is the crypto interface for the root chain.

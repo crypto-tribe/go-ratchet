@@ -1,7 +1,7 @@
 package ratchet
 
 import (
-	"github.com/crypto-tribe/go-ratchet/keys"
+	"github.com/platform-source/aegis/keys"
 )
 
 // Crypto is the interface for rachet crypto.

@@ -3,7 +3,7 @@ package rootchain
 import (
 	"errors"
 
-	"github.com/crypto-tribe/go-ratchet/keys"
+	"github.com/platform-source/aegis/keys"
 )
 
 // Chain is the ratchet root chain.

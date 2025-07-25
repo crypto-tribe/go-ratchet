@@ -5,11 +5,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/crypto-tribe/go-ratchet/header"
-	"github.com/crypto-tribe/go-ratchet/keys"
-	"github.com/crypto-tribe/go-ratchet/receivingchain"
-	"github.com/crypto-tribe/go-ratchet/rootchain"
-	"github.com/crypto-tribe/go-ratchet/sendingchain"
+	"github.com/platform-source/aegis/header"
+	"github.com/platform-source/aegis/keys"
+	"github.com/platform-source/aegis/receivingchain"
+	"github.com/platform-source/aegis/rootchain"
+	"github.com/platform-source/aegis/sendingchain"
 )
 
 type testCrypto struct{}

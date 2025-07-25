@@ -5,7 +5,7 @@ import (
 	"crypto/rand"
 	"errors"
 
-	"github.com/crypto-tribe/go-ratchet/keys"
+	"github.com/platform-source/aegis/keys"
 )
 
 type defaultCrypto struct {

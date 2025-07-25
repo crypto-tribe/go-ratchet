@@ -3,9 +3,9 @@ package receivingchain
 import (
 	"errors"
 
-	"github.com/crypto-tribe/go-ratchet/header"
-	"github.com/crypto-tribe/go-ratchet/keys"
-	"github.com/crypto-tribe/go-utils/slices"
+	"github.com/platform-source/aegis/header"
+	"github.com/platform-source/aegis/keys"
+	"github.com/platform-source/tools/slices"
 )
 
 // Chain is the ratchet receiving chain.

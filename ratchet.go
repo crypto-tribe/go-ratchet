@@ -3,11 +3,11 @@ package ratchet
 import (
 	"errors"
 
-	"github.com/crypto-tribe/go-ratchet/keys"
-	"github.com/crypto-tribe/go-ratchet/receivingchain"
-	"github.com/crypto-tribe/go-ratchet/rootchain"
-	"github.com/crypto-tribe/go-ratchet/sendingchain"
-	"github.com/crypto-tribe/go-utils/atomic"
+	"github.com/platform-source/aegis/keys"
+	"github.com/platform-source/aegis/receivingchain"
+	"github.com/platform-source/aegis/rootchain"
+	"github.com/platform-source/aegis/sendingchain"
+	"github.com/platform-source/tools/atomic"
 )
 
 // Ratchet is the participant of the conversation.

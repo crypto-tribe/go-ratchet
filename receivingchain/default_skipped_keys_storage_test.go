@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/crypto-tribe/go-ratchet/keys"
+	"github.com/platform-source/aegis/keys"
 )
 
 func TestDefaultSkippedKeysStorageAddClear(t *testing.T) {

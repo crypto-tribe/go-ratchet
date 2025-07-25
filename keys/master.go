@@ -1,7 +1,7 @@
 package keys
 
 import (
-	"github.com/crypto-tribe/go-utils/slices"
+	"github.com/platform-source/tools/slices"
 )
 
 // Master is the master key to derive new message keys.

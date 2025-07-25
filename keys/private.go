@@ -1,7 +1,7 @@
 package keys
 
 import (
-	"github.com/crypto-tribe/go-utils/slices"
+	"github.com/platform-source/tools/slices"
 )
 
 // Private key is participant's private key.

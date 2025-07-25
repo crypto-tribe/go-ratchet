@@ -5,7 +5,7 @@ import (
 	"hash"
 	"io"
 
-	"github.com/crypto-tribe/go-ratchet/keys"
+	"github.com/platform-source/aegis/keys"
 	"golang.org/x/crypto/blake2b"
 	"golang.org/x/crypto/hkdf"
 )
